@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace BankingSystemAPI.Core.Models;
+namespace BankingSystemAPI.Core.Entities;
 
 public class Account
 {

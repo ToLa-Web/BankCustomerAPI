@@ -1,6 +1,6 @@
 ﻿namespace BankingSystemAPI.Core.Enums;
 
-public enum UserStatus
+public enum UserRole
 {
     Customer = 1,
     Employee = 2,
