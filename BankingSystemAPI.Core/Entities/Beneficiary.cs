@@ -1,4 +1,4 @@
-﻿namespace BankingSystemAPI.Core.Models;
+﻿namespace BankingSystemAPI.Core.Entities;
 
 public class Beneficiary
 {
