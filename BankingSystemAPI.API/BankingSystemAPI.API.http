@@ -1,0 +1,28 @@
+@host = http://localhost:5131
+
+GET {{host}}/weatherforecast/
+Accept: application/json
+
+###
+POST {{host}}/api/user/register
+Content-Type: application/json
+
+{
+  "userName": "tola123",
+  "email": "tola@example.com",
+  "password": "tola@123",
+  "confirmPassword": "tola@123"
+}
+
+###
+POST {{host}}/api/User/login
+Content-Type: application/json
+
+{
+  "identifier": "tola@example.com",
+  "password": "tola@123"
+}
+
+###
+GET {{host}}/api/User/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJ1c2VybmFtZSI6ImpvaG4xMjMiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiIwIiwiZXhwIjoxNzYzMTExMTcwLCJpc3MiOiJCYW5raW5nU3lzdGVtQVBJIiwiYXVkIjoiQmFua2luZ1N5c3RlbUFQSVVzZXJzIn0.GgL_6_jQ8dJFwwmvGuc1x6fYPs0Dsy5eP7ji5oozUJk

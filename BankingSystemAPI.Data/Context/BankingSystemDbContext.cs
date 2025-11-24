@@ -9,6 +9,7 @@ public class BankingSystemDbContext : DbContext
     public BankingSystemDbContext(DbContextOptions<BankingSystemDbContext> options) : base(options)
     {}
     public DbSet<User> Users { get; set; }
+    public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
     //public DbSet<Customer> Customers { get; set; }
     //public DbSet<Account>  Accounts { get; set; }
     //public DbSet<Transaction> Transactions { get; set; }
@@ -18,10 +19,9 @@ public class BankingSystemDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         //Apply Configuration
         modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new EmailVerificationTokenConfiguration());
 
-        
-        
-        
+
         // //User Configuration
         // modelBuilder.Entity<Customer>()
         //     .HasIndex(c => c.Email)

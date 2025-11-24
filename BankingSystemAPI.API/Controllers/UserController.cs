@@ -16,37 +16,6 @@ public class UserController : ControllerBase
         _userService = userService;
     }
     
-    //
-    //Public EndPoint//
-    //
-    
-    //Register 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] UserCreateDto dto)
-    {
-        var user = await _userService.RegisterAsync(dto);
-        return Ok(user);
-    }
-    
-    //Authentication or Login
-    [HttpPost("login")]
-    public async Task<IActionResult> Authenticate([FromBody] AuthenticateRequestDto request)
-    {
-        var user = await _userService.AuthenticateAsync(request.Identifier,  request.Password);
-        if (user == null)
-            return Unauthorized(new { message = "Invalid credentials." });
-        return Ok(user);
-    }
-    
-    //Verify Email
-    [HttpPost("{userId}/verify-email")]
-    public async Task<IActionResult> VerifyEmail(int userId, [FromBody] VerifyEmailDto dto)
-    {
-        var result = await _userService.VerifyEmailAsync(userId, dto);
-        
-        return result.Success ? Ok(result) : BadRequest(result);
-    }
-    
     // ------------------------------
     // Protected Endpoints
     // ------------------------------
@@ -81,15 +50,6 @@ public class UserController : ControllerBase
     {
         var user = await _userService.UpdateAsync(userId, dto);
         return user == null ? NotFound() : Ok(user);
-    }
-
-    //ChangePassword
-    [Authorize]
-    [HttpPost("{userId}/change-password")]
-    public async Task<IActionResult> ChangePassword(int userId, [FromBody] ChangePasswordDto dto)
-    {
-        var result = await _userService.ChangePasswordAsync(userId, dto);
-        return result.Success ? Ok(result) : BadRequest(result);
     }
     
     //Delete user performedByRole
