@@ -5,7 +5,7 @@ namespace BankingSystemAPI.Services.Mappings;
 
 public class UserMapper
 {
-    public static UserResponseDto ToDto(User user)
+    public static UserResponseDto ToUserResponseDto(User user)
     {
         return new UserResponseDto
         {
@@ -19,4 +19,19 @@ public class UserMapper
             LastLoginAt = user.LastLoginAt
         };
     }
+
+    public static AuthResponseDto ToAuthResponseDto(User user, string accessToken, RefreshToken refreshToken)
+    {
+        return new AuthResponseDto
+        {
+            UserId = user.UserId,
+            Username = user.Username,
+            Email = user.Email,
+            Role = user.Role,
+            IsActive = user.IsActive,
+            IsEmailVerified = user.IsEmailVerified,
+            Token = accessToken,
+            RefreshToken = refreshToken.Token
+        };
+    } 
 }

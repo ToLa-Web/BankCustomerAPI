@@ -76,6 +76,9 @@ builder.Services.AddSingleton<JwtTokenGenerator>();
 //app_settings.json
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<RefreshTokenSetting>(
+    builder.Configuration.GetSection("RefreshTokenSettings")
+);
 //Register DbContext
 builder.Services.AddDbContext<BankingSystemDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -83,11 +86,14 @@ builder.Services.AddDbContext<BankingSystemDbContext>(options =>
 // Register repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IEmailVerificationTokenService, EmailVerificationTokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 var app = builder.Build();
 
 

@@ -45,6 +45,25 @@ public class AuthController : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
     
+    //Request refreshToken
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromQuery] RefreshTokenRequestDto request)
+    {
+        var result = await _authService.RefreshTokenAsync(request.RefreshToken);
+        return result != null ?  Ok(result) : BadRequest(new {message = "Invalid or expired refresh token"});
+    }
+    
+    //Request logout
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromQuery] LogoutRequestDto request)
+    {
+        var success = await _authService.LogoutAsync(request.RefreshToken);
+        if (!success)
+            return BadRequest(new {message = "Invalid or expired refresh token"});
+        
+        return Ok(new {message = "Logout successful"});
+    }
+    
     //Request reset password
     [HttpPost("request-password-reset")]
     public async Task<IActionResult> RequestPasswordReset([FromBody] RequestPasswordResetDto request)

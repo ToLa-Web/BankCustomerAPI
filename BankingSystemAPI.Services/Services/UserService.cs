@@ -72,14 +72,14 @@ public class UserService : IUserService
     public async Task<UserResponseDto?> GetByIdAsync(int userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        return user == null ? throw new KeyNotFoundException("User not found.") : UserMapper.ToDto(user);
+        return user == null ? throw new KeyNotFoundException("User not found.") : UserMapper.ToUserResponseDto(user);
     }
     
     //Get user by email
     public async Task<UserResponseDto?> GetByEmailAsync(string email)
     {
         var user = await _userRepository.GetByEmailAsync(email);
-        return user == null ? throw new KeyNotFoundException("User not found.") : UserMapper.ToDto(user);
+        return user == null ? throw new KeyNotFoundException("User not found.") : UserMapper.ToUserResponseDto(user);
     }
     
     //Get all user 
@@ -87,7 +87,7 @@ public class UserService : IUserService
     {
         var users = await _userRepository.GetAllAsync();
 
-        return users.Select(UserMapper.ToDto);
+        return users.Select(UserMapper.ToUserResponseDto);
     }
     
     //User update
@@ -111,7 +111,7 @@ public class UserService : IUserService
 
         await _userRepository.UpdateAsync(existing);
         
-        return UserMapper.ToDto(existing);
+        return UserMapper.ToUserResponseDto(existing);
     }
     
     // //Verify email

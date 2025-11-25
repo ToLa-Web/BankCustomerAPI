@@ -4,8 +4,10 @@ using BankingSystemAPI.Core.Entities;
 using BankingSystemAPI.Core.Enums;
 using BankingSystemAPI.Core.Interfaces.Repositories;
 using BankingSystemAPI.Core.Interfaces.Services;
+using BankingSystemAPI.Core.settings;
 using BankingSystemAPI.Services.Helpers;
 using BankingSystemAPI.Services.Mappings;
+using Microsoft.Extensions.Options;
 
 namespace BankingSystemAPI.Services.Services;
 
@@ -15,12 +17,16 @@ public class AuthenticationService : IAuthenticationService
     private readonly JwtTokenGenerator _jwtTokenGenerator;
     private readonly IEmailVerificationTokenService _emailVerificationTokenService;
     private readonly IEmailService _emailService;
-    public AuthenticationService(IUserRepository userRepository, IEmailVerificationTokenService emailVerificationTokenService, IEmailService emailService, JwtTokenGenerator jwtTokenGenerator)
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly RefreshTokenSetting _refreshTokenSetting;
+    public AuthenticationService(IUserRepository userRepository, IEmailVerificationTokenService emailVerificationTokenService, IEmailService emailService, JwtTokenGenerator jwtTokenGenerator, IRefreshTokenRepository refreshTokenRepository, IOptions<RefreshTokenSetting> refreshTokenSetting)
     {
         _userRepository = userRepository;
         _emailVerificationTokenService = emailVerificationTokenService;
         _emailService = emailService;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _refreshTokenRepository = refreshTokenRepository;
+        _refreshTokenSetting = refreshTokenSetting.Value;
     }
     // Register new user
     public async Task<UserResponseDto> RegisterAsync(UserCreateDto dto)
@@ -44,16 +50,15 @@ public class AuthenticationService : IAuthenticationService
         var token = await _emailVerificationTokenService.GenerateAndSaveTokenAsync(newUser.UserId, TokenType.EmailVerification, TimeSpan.FromHours(24));
         
         await _emailService.SendVerificationEmailAsync(newUser.Email, token.Token);
-        return UserMapper.ToDto(newUser);
+        return UserMapper.ToUserResponseDto(newUser);
     }
 
     //Authenticate or Login
-    public async Task<UserResponseDto?> AuthenticateAsync(string identifier, string password)
+    public async Task<AuthResponseDto?> AuthenticateAsync(string identifier, string password)
     {
         //try to find by email first 
         // If not found, try username
         var user = await _userRepository.GetByEmailAsync(identifier) ?? await _userRepository.GetByUsernameAsync(identifier);
-
         if (user == null)
             return null;
 
@@ -61,10 +66,19 @@ public class AuthenticationService : IAuthenticationService
         if (!verified)
             return null;
 
-        var token = _jwtTokenGenerator.GenerateToken(user);
+        //generate access token
+        var accessToke = _jwtTokenGenerator.GenerateToken(user);
+        
+        //generate refresh token
+        var refreshToken = new RefreshToken
+        {
+            UserId = user.UserId,
+            Token = TokenGenerator.GenerateToken(_refreshTokenSetting.TokenLength),
+            ExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenSetting.ExpiryDays)
+        };
+        await _refreshTokenRepository.AddAsync(refreshToken);
 
-        var userDto = UserMapper.ToDto(user);
-        userDto.Token = token; // Assign token in MapToResponseDto
+        var userDto = UserMapper.ToAuthResponseDto(user, accessToke, refreshToken);
 
         return userDto;
     }
@@ -89,6 +103,45 @@ public class AuthenticationService : IAuthenticationService
         //Mark as used 
         await _emailVerificationTokenService.MarkTokenUsedAsync(emailToken);
         return new ResultDto { Success = true, Message = "Email verified successfully." };
+    }
+    
+    //Refresh token
+    public async Task<AuthResponseDto?> RefreshTokenAsync(string refreshToken)
+    {
+        var storedToken = await _refreshTokenRepository.GetByRefreshTokenAsync(refreshToken);
+        if (storedToken is not { IsActive: true })  //if (storedToken == null || !storedToken.IsActive)
+            return null;
+
+        var user = await _userRepository.GetByIdAsync(storedToken.UserId);
+        if (user == null)
+            return null;
+        
+        storedToken.RevokedAt = DateTime.UtcNow;
+        await _refreshTokenRepository.UpdateAsync(storedToken);
+        
+        var newAccessToken = _jwtTokenGenerator.GenerateToken(user);
+        var newRefreshToken = new RefreshToken
+        {
+            UserId = user.UserId,
+            Token = TokenGenerator.GenerateToken(_refreshTokenSetting.TokenLength),
+            ExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenSetting.ExpiryDays)
+        };
+        await _refreshTokenRepository.AddAsync(newRefreshToken);
+        
+        return UserMapper.ToAuthResponseDto(user, newAccessToken, newRefreshToken);
+    }
+    
+    //Logout
+    public async Task<bool> LogoutAsync(string refreshToken)
+    {
+        var storedToken = await _refreshTokenRepository.GetByRefreshTokenAsync(refreshToken);
+        if (storedToken == null || !storedToken.IsActive)
+            return false; // nothing to revoke
+        
+        storedToken.RevokedAt = DateTime.UtcNow;
+        await _refreshTokenRepository.UpdateAsync(storedToken);
+        
+        return true;
     }
 
     public async Task<ResultDto> RequestPasswordResetAsync(string email)
