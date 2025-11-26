@@ -9,6 +9,7 @@ using BankingSystemAPI.Services.Helpers;
 using BankingSystemAPI.Services.Mappings;
 using Microsoft.Extensions.Options;
 
+
 namespace BankingSystemAPI.Services.Services;
 
 public class AuthenticationService : IAuthenticationService
@@ -19,7 +20,16 @@ public class AuthenticationService : IAuthenticationService
     private readonly IEmailService _emailService;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly RefreshTokenSetting _refreshTokenSetting;
-    public AuthenticationService(IUserRepository userRepository, IEmailVerificationTokenService emailVerificationTokenService, IEmailService emailService, JwtTokenGenerator jwtTokenGenerator, IRefreshTokenRepository refreshTokenRepository, IOptions<RefreshTokenSetting> refreshTokenSetting)
+    private readonly IAuditLogService  _auditLogService;
+    public AuthenticationService(
+        IUserRepository userRepository, 
+        IEmailVerificationTokenService emailVerificationTokenService, 
+        IEmailService emailService, 
+        JwtTokenGenerator jwtTokenGenerator, 
+        IRefreshTokenRepository refreshTokenRepository, 
+        IOptions<RefreshTokenSetting> refreshTokenSetting,
+        IAuditLogService auditLogService
+        )
     {
         _userRepository = userRepository;
         _emailVerificationTokenService = emailVerificationTokenService;
@@ -27,6 +37,7 @@ public class AuthenticationService : IAuthenticationService
         _jwtTokenGenerator = jwtTokenGenerator;
         _refreshTokenRepository = refreshTokenRepository;
         _refreshTokenSetting = refreshTokenSetting.Value;
+        _auditLogService = auditLogService;
     }
     // Register new user
     public async Task<UserResponseDto> RegisterAsync(UserCreateDto dto)
@@ -54,18 +65,24 @@ public class AuthenticationService : IAuthenticationService
     }
 
     //Authenticate or Login
-    public async Task<AuthResponseDto?> AuthenticateAsync(string identifier, string password)
+    public async Task<AuthResponseDto?> AuthenticateAsync(string identifier, string password, string? ip, string? device)
     {
         //try to find by email first 
         // If not found, try username
         var user = await _userRepository.GetByEmailAsync(identifier) ?? await _userRepository.GetByUsernameAsync(identifier);
         if (user == null)
+        {
+            await _auditLogService.LogAsync(null, "Failed login - user not found", ip, device);
             return null;
-
+        }
+        
         var verified = PasswordHasher.VerifyPassword(password, user.PasswordHash, user.PasswordSalt);
         if (!verified)
+        {
+            await _auditLogService.LogAsync(null, "Failed login - wrong password", ip, device);
             return null;
-
+        }
+        
         //generate access token
         var accessToke = _jwtTokenGenerator.GenerateToken(user);
         
@@ -77,6 +94,8 @@ public class AuthenticationService : IAuthenticationService
             ExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenSetting.ExpiryDays)
         };
         await _refreshTokenRepository.AddAsync(refreshToken);
+        // Log successful login
+        await _auditLogService.LogAsync(user.UserId, "User logged in", ip, device);
 
         var userDto = UserMapper.ToAuthResponseDto(user, accessToke, refreshToken);
 
@@ -106,12 +125,15 @@ public class AuthenticationService : IAuthenticationService
     }
     
     //Refresh token
-    public async Task<AuthResponseDto?> RefreshTokenAsync(string refreshToken)
+    public async Task<AuthResponseDto?> RefreshTokenAsync(string refreshToken, string? ip, string? device)
     {
         var storedToken = await _refreshTokenRepository.GetByRefreshTokenAsync(refreshToken);
-        if (storedToken is not { IsActive: true })  //if (storedToken == null || !storedToken.IsActive)
+        if (storedToken is not { IsActive: true }) //if (storedToken == null || !storedToken.IsActive)
+        {
+            await _auditLogService.LogAsync(null, "Refresh token failed", ip, device);
             return null;
-
+        }
+        
         var user = await _userRepository.GetByIdAsync(storedToken.UserId);
         if (user == null)
             return null;
@@ -127,19 +149,26 @@ public class AuthenticationService : IAuthenticationService
             ExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenSetting.ExpiryDays)
         };
         await _refreshTokenRepository.AddAsync(newRefreshToken);
-        
+        //log success
+        await _auditLogService.LogAsync(user.UserId, "Refresh token refreshed", ip, device);
         return UserMapper.ToAuthResponseDto(user, newAccessToken, newRefreshToken);
     }
     
     //Logout
-    public async Task<bool> LogoutAsync(string refreshToken)
+    public async Task<bool> LogoutAsync(string refreshToken, string? ip, string? device)
     {
         var storedToken = await _refreshTokenRepository.GetByRefreshTokenAsync(refreshToken);
         if (storedToken == null || !storedToken.IsActive)
+        {
+            await _auditLogService.LogAsync(null, "Logout failed (invalid refresh token)",
+                ip, device);
             return false; // nothing to revoke
+        }
         
         storedToken.RevokedAt = DateTime.UtcNow;
         await _refreshTokenRepository.UpdateAsync(storedToken);
+
+        await _auditLogService.LogAsync(storedToken.UserId, "Logout", ip, device);
         
         return true;
     }

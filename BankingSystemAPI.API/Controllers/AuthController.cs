@@ -30,7 +30,8 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Authenticate([FromBody] AuthenticateRequestDto request)
     {
-        var user = await _authService.AuthenticateAsync(request.Identifier, request.Password);
+        var (ip, device) = GetRequestInfo();
+        var user = await _authService.AuthenticateAsync(request.Identifier, request.Password, ip, device);
         if (user == null)
             return Unauthorized(new { message = "Invalid credentials." });
         return Ok(user);
@@ -49,7 +50,8 @@ public class AuthController : ControllerBase
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken([FromQuery] RefreshTokenRequestDto request)
     {
-        var result = await _authService.RefreshTokenAsync(request.RefreshToken);
+        var (ip, device) = GetRequestInfo();
+        var result = await _authService.RefreshTokenAsync(request.RefreshToken, ip, device);
         return result != null ?  Ok(result) : BadRequest(new {message = "Invalid or expired refresh token"});
     }
     
@@ -57,7 +59,8 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromQuery] LogoutRequestDto request)
     {
-        var success = await _authService.LogoutAsync(request.RefreshToken);
+        var (ip, device) = GetRequestInfo();
+        var success = await _authService.LogoutAsync(request.RefreshToken, ip, device);
         if (!success)
             return BadRequest(new {message = "Invalid or expired refresh token"});
         
@@ -153,4 +156,13 @@ public async Task<IActionResult> ShowResetPasswordForm([FromQuery] string token)
         var result = await _authService.ResetPasswordAsync(dto.Token, dto.NewPassword);
         return result.Success ? Ok(result) : BadRequest(result);
     }
+    
+    //Helper Method 
+    private (string? ip, string? device) GetRequestInfo()
+    {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var device = HttpContext.Request.Headers.UserAgent.ToString();
+        return (ip, device);
+    }
+    
 }

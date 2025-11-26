@@ -21,4 +21,7 @@ public class User
     public DateTime? LastLoginAt { get; set; }
     [NotMapped]
     public Customer? Customer { get; set; }
+    
+    public ICollection<RefreshToken>  RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
 }

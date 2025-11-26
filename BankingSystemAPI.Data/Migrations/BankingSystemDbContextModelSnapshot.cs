@@ -22,6 +22,46 @@ namespace BankingSystemAPI.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("BankingSystemAPI.Core.Entities.AuditLog", b =>
+                {
+                    b.Property<int>("AuditLogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditLogId"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Device")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("AuditLogId");
+
+                    b.HasIndex("Action");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuditLog", (string)null);
+                });
+
             modelBuilder.Entity("BankingSystemAPI.Core.Entities.EmailVerificationToken", b =>
                 {
                     b.Property<int>("TokenId")
@@ -56,6 +96,38 @@ namespace BankingSystemAPI.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("EmailVerificationTokens");
+                });
+
+            modelBuilder.Entity("BankingSystemAPI.Core.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("RefreshTokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RefreshTokenId"));
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RefreshTokenId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("BankingSystemAPI.Core.Entities.User", b =>
@@ -123,6 +195,16 @@ namespace BankingSystemAPI.Data.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("BankingSystemAPI.Core.Entities.AuditLog", b =>
+                {
+                    b.HasOne("BankingSystemAPI.Core.Entities.User", "User")
+                        .WithMany("AuditLogs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BankingSystemAPI.Core.Entities.EmailVerificationToken", b =>
                 {
                     b.HasOne("BankingSystemAPI.Core.Entities.User", "User")
@@ -132,6 +214,24 @@ namespace BankingSystemAPI.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BankingSystemAPI.Core.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("BankingSystemAPI.Core.Entities.User", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BankingSystemAPI.Core.Entities.User", b =>
+                {
+                    b.Navigation("AuditLogs");
+
+                    b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618
         }
