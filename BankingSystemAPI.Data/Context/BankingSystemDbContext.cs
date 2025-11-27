@@ -12,7 +12,7 @@ public class BankingSystemDbContext : DbContext
     public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
-    //public DbSet<Customer> Customers { get; set; }
+    public DbSet<Customer> Customers { get; set; }
     //public DbSet<Account>  Accounts { get; set; }
     //public DbSet<Transaction> Transactions { get; set; }
 
