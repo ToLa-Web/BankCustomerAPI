@@ -16,42 +16,53 @@ public class AuditLogService : IAuditLogService
 
     public async Task LogAsync(int? userId, string action, string? ip, string? device)
     {
-        var readableDevice = device ?? "Unknown";
+        string readableDevice = "Unknown Device";
 
-        if (!string.IsNullOrEmpty(readableDevice))
+        if (!string.IsNullOrWhiteSpace(device))
         {
-            var parser =Parser.GetDefault();
-            var clientInfo = parser.Parse(device);
-            
-            var browser = $"{clientInfo.UA.Family} {clientInfo.UA.Major}";
-            var os = clientInfo.OS.Family;
-            var deviceFamily = clientInfo.Device.Family;
-            // Improve desktop detection
-            if (deviceFamily == "Other" && clientInfo.OS.Family.Contains("Windows", StringComparison.OrdinalIgnoreCase))
-                deviceFamily = "Desktop";
-            if (deviceFamily == "Other" && clientInfo.OS.Family.Contains("Mac", StringComparison.OrdinalIgnoreCase))
-                deviceFamily = "Desktop";
-            if (deviceFamily == "Other" && clientInfo.OS.Family.Contains("Linux", StringComparison.OrdinalIgnoreCase))
-                deviceFamily = "Desktop";
-            
-            if (deviceFamily == "Other" && clientInfo.OS.Family.Contains("Android", StringComparison.OrdinalIgnoreCase))
-                deviceFamily = "Mobile";
-            if (deviceFamily == "Other" && clientInfo.OS.Family.Contains("iOS", StringComparison.OrdinalIgnoreCase))
-                deviceFamily = "Mobile";
+            try
+            {
+                var parser = Parser.GetDefault();
+                var clientInfo = parser.Parse(device);
 
-            
-            readableDevice = $"{browser} - {os} - {deviceFamily}";
+                var browser = $"{clientInfo.UA.Family} {clientInfo.UA.Major}";
+                var os = clientInfo.OS.Family;
+                var deviceFamily = clientInfo.Device.Family;
+
+                // Desktop detection
+                if (deviceFamily == "Other" && os.Contains("Windows", StringComparison.OrdinalIgnoreCase))
+                    deviceFamily = "Desktop";
+                if (deviceFamily == "Other" && os.Contains("Mac", StringComparison.OrdinalIgnoreCase))
+                    deviceFamily = "Desktop";
+                if (deviceFamily == "Other" && os.Contains("Linux", StringComparison.OrdinalIgnoreCase))
+                    deviceFamily = "Desktop";
+
+                // Mobile detection
+                if (deviceFamily == "Other" && os.Contains("Android", StringComparison.OrdinalIgnoreCase))
+                    deviceFamily = "Mobile";
+                if (deviceFamily == "Other" && os.Contains("iOS", StringComparison.OrdinalIgnoreCase))
+                    deviceFamily = "Mobile";
+
+                readableDevice = $"{browser} - {os} - {deviceFamily}";
+            }
+            catch
+            {
+                readableDevice = "Unknown Device";
+            }
         }
+
         var log = new AuditLog
         {
             UserId = userId,
             Action = action,
-            IpAddress = ip,
+            IpAddress = ip ?? "Unknown IP",
             Device = readableDevice,
+            Timestamp = DateTime.UtcNow
         };
-        
+
         await _logRepository.AddAsync(log);
     }
+
 
     public async Task<(IEnumerable<AuditLogResponseDto> Logs, int TotalCount)> GetLogsAsync(
         int? userId,

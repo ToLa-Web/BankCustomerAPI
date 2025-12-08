@@ -19,7 +19,6 @@ public class User
     public DateTime CreatedAt { get; set; } =  DateTime.UtcNow;
     
     public DateTime? LastLoginAt { get; set; }
-    [NotMapped]
     public Customer? Customer { get; set; }
     
     public ICollection<RefreshToken>  RefreshTokens { get; set; } = new List<RefreshToken>();

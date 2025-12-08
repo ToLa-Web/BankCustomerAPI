@@ -1,7 +1,9 @@
 ﻿using BankingSystemAPI.Core.DTOs.Request;
+using BankingSystemAPI.Core.DTOs.Request.UserRequest;
 using BankingSystemAPI.Core.DTOs.Response;
 using BankingSystemAPI.Core.Entities;
 using BankingSystemAPI.Core.Enums;
+using BankingSystemAPI.Core.Interfaces;
 using BankingSystemAPI.Core.Interfaces.Repositories;
 using BankingSystemAPI.Core.Interfaces.Services;
 using BankingSystemAPI.Core.settings;
@@ -21,6 +23,7 @@ public class AuthenticationService : IAuthenticationService
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly RefreshTokenSetting _refreshTokenSetting;
     private readonly IAuditLogService  _auditLogService;
+    private readonly IUnitOfWork  _unitOfWork;
     public AuthenticationService(
         IUserRepository userRepository, 
         IEmailVerificationTokenService emailVerificationTokenService, 
@@ -28,7 +31,8 @@ public class AuthenticationService : IAuthenticationService
         JwtTokenGenerator jwtTokenGenerator, 
         IRefreshTokenRepository refreshTokenRepository, 
         IOptions<RefreshTokenSetting> refreshTokenSetting,
-        IAuditLogService auditLogService
+        IAuditLogService auditLogService,
+        IUnitOfWork unitOfWork
         )
     {
         _userRepository = userRepository;
@@ -38,6 +42,7 @@ public class AuthenticationService : IAuthenticationService
         _refreshTokenRepository = refreshTokenRepository;
         _refreshTokenSetting = refreshTokenSetting.Value;
         _auditLogService = auditLogService;
+        _unitOfWork = unitOfWork;
     }
     // Register new user
     public async Task<UserResponseDto> RegisterAsync(UserCreateDto dto)
@@ -73,6 +78,7 @@ public class AuthenticationService : IAuthenticationService
         if (user == null)
         {
             await _auditLogService.LogAsync(null, "Failed login - user not found", ip, device);
+            await _unitOfWork.SaveChangesAsync();
             return null;
         }
         
@@ -80,6 +86,7 @@ public class AuthenticationService : IAuthenticationService
         if (!verified)
         {
             await _auditLogService.LogAsync(null, "Failed login - wrong password", ip, device);
+            await _unitOfWork.SaveChangesAsync();
             return null;
         }
         
@@ -93,12 +100,18 @@ public class AuthenticationService : IAuthenticationService
             Token = TokenGenerator.GenerateToken(_refreshTokenSetting.TokenLength),
             ExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenSetting.ExpiryDays)
         };
+        
         await _refreshTokenRepository.AddAsync(refreshToken);
+        
+        user.LastLoginAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user);
+        
         // Log successful login
         await _auditLogService.LogAsync(user.UserId, "User logged in", ip, device);
+        await _unitOfWork.SaveChangesAsync();
 
         var userDto = UserMapper.ToAuthResponseDto(user, accessToke, refreshToken);
-
+        
         return userDto;
     }
     
@@ -131,6 +144,7 @@ public class AuthenticationService : IAuthenticationService
         if (storedToken is not { IsActive: true }) //if (storedToken == null || !storedToken.IsActive)
         {
             await _auditLogService.LogAsync(null, "Refresh token failed", ip, device);
+            await _unitOfWork.SaveChangesAsync();
             return null;
         }
         
@@ -151,6 +165,7 @@ public class AuthenticationService : IAuthenticationService
         await _refreshTokenRepository.AddAsync(newRefreshToken);
         //log success
         await _auditLogService.LogAsync(user.UserId, "Refresh token refreshed", ip, device);
+        await _unitOfWork.SaveChangesAsync();
         return UserMapper.ToAuthResponseDto(user, newAccessToken, newRefreshToken);
     }
     
@@ -162,6 +177,7 @@ public class AuthenticationService : IAuthenticationService
         {
             await _auditLogService.LogAsync(null, "Logout failed (invalid refresh token)",
                 ip, device);
+            await _unitOfWork.SaveChangesAsync();
             return false; // nothing to revoke
         }
         
@@ -169,6 +185,7 @@ public class AuthenticationService : IAuthenticationService
         await _refreshTokenRepository.UpdateAsync(storedToken);
 
         await _auditLogService.LogAsync(storedToken.UserId, "Logout", ip, device);
+        await _unitOfWork.SaveChangesAsync();
         
         return true;
     }

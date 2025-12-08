@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BankingSystemAPI.Core.Enums;
 
 namespace BankingSystemAPI.Services.Helpers
 {
@@ -27,13 +28,22 @@ namespace BankingSystemAPI.Services.Helpers
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            // Use a List<Claim> so we can add more later
+            var claims = new List<Claim>
             {
                 new Claim("id", user.UserId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("username", user.Username),
                 new Claim(ClaimTypes.Role, user.Role.ToString())
             };
+
+            // -------------------------------------------
+            // ADD VERIFICATION STATUS CLAIM FOR CUSTOMER
+            // -------------------------------------------
+            claims.Add(user.Customer != null
+                ? new Claim("verificationStatus", user.Customer.VerificationStatus.ToString())
+                // User has no customer profile yet → Default None
+                : new Claim("verificationStatus", nameof(CustomerVerificationStatus.None)));
 
             var token = new JwtSecurityToken(
                 issuer: issuer,
@@ -45,5 +55,6 @@ namespace BankingSystemAPI.Services.Helpers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
     }
 }

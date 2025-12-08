@@ -13,8 +13,9 @@ public class BankingSystemDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<Customer> Customers { get; set; }
-    //public DbSet<Account>  Accounts { get; set; }
-    //public DbSet<Transaction> Transactions { get; set; }
+    public DbSet<Account>  Accounts { get; set; }
+    public DbSet<Beneficiary>  Beneficiaries { get; set; }
+    public DbSet<Transaction> Transactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

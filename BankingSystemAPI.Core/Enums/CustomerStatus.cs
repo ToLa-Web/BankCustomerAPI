@@ -2,7 +2,7 @@
 
 public enum CustomerStatus
 {
-    Active,     // Normal account
-    Suspended,  // Temporarily blocked
-    Closed      // Permanently closed
+    Active = 0,     // Normal account
+    Suspended = 1,  // Temporarily blocked
+    Closed = 2     // Permanently closed
 }

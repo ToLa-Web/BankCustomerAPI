@@ -1,4 +1,4 @@
-﻿using BankingSystemAPI.Core.DTOs.Request;
+﻿using BankingSystemAPI.Core.DTOs.Request.UserRequest;
 using BankingSystemAPI.Core.DTOs.Response;
 
 namespace BankingSystemAPI.Core.Interfaces.Services;

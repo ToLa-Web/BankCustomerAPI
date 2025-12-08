@@ -12,4 +12,5 @@ public class AuthResponseDto
     public bool IsEmailVerified { get; set; }
     public string Token { get; set; } = string.Empty; // Access token
     public string RefreshToken { get; set; } = string.Empty; // New Refresh token
+    public DateTime? LastLoginAt { get; set; } 
 }

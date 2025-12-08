@@ -14,7 +14,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.HasKey(c => c.CustomerId);
         builder.Property(c => c.UserId).IsRequired();
         builder.Property(c => c.NationalId)
-            .HasMaxLength(50)
+            .HasMaxLength(20)
             .IsRequired();
         builder.Property(c => c.PhoneNumber)
             .HasMaxLength(20)
@@ -23,14 +23,14 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.LastName).IsRequired().HasMaxLength(100);
         builder.Property(c => c.Address).IsRequired().HasMaxLength(500);
         builder.Property(c => c.DateOfBirth).IsRequired().HasColumnType("date");
-        builder.Property(c => c.Gender).IsRequired().HasMaxLength(10);
-        builder.Property(c => c.CustomerNumber).IsRequired();
+        builder.Property(c => c.Gender).HasMaxLength(10);
+        builder.Property(c => c.CustomerNumber).HasMaxLength(20).IsRequired();
         builder.Property(c => c.VerificationStatus)
-            .HasConversion<string>()
+            .HasConversion<int>()
             .HasDefaultValue(CustomerVerificationStatus.None)
             .IsRequired();
         builder.Property(c => c.Status)
-            .HasConversion<string>()
+            .HasConversion<int>()
             .HasDefaultValue(CustomerStatus.Active)
             .IsRequired();
         builder.Property(c => c.CreatedAt)
@@ -44,11 +44,17 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.HasIndex(c => c.UserId).IsUnique().HasDatabaseName("IX_Customers_UserId"); 
         builder.HasIndex(c => c.NationalId).IsUnique();
         builder.HasIndex(c => c.PhoneNumber).IsUnique();
+        builder.HasIndex(c => c.CustomerNumber).IsUnique();
         builder.HasIndex(c => c.Status);
         // 1:1
         builder.HasOne(c => c.User)
             .WithOne(u => u.Customer)
             .HasForeignKey<Customer>(c => c.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        // 1:1
+        builder.HasOne(c => c.VerifiedByUser)
+            .WithMany()
+            .HasForeignKey(c => c.VerifiedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
         // 1:N
         builder.HasMany(c => c.Accounts)

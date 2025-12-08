@@ -31,7 +31,8 @@ public class UserMapper
             IsActive = user.IsActive,
             IsEmailVerified = user.IsEmailVerified,
             Token = accessToken,
-            RefreshToken = refreshToken.Token
+            RefreshToken = refreshToken.Token,
+            LastLoginAt = user.LastLoginAt
         };
     } 
 }

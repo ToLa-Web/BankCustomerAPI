@@ -38,9 +38,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsUnique();
         
         //One-to-One with Customer (optional - only for Customer role)
-        // builder.HasOne(u => u.Customer)
-        //     .WithOne(c => c.User)
-        //     .HasForeignKey<Customer>(c => c.UserId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+         builder.HasOne(u => u.Customer)
+             .WithOne(c => c.User)
+             .HasForeignKey<Customer>(c => c.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
     }
 }

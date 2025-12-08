@@ -1,7 +1,10 @@
 using System.Text;
+using BankingSystemAPI.Core.Enums;
+using BankingSystemAPI.Core.Interfaces;
 using BankingSystemAPI.Core.Interfaces.Repositories;
 using BankingSystemAPI.Core.Interfaces.Services;
 using BankingSystemAPI.Core.settings;
+using BankingSystemAPI.Data;
 using BankingSystemAPI.Data.Context;
 using BankingSystemAPI.Data.Repositories;
 using BankingSystemAPI.Services.Helpers;
@@ -77,7 +80,18 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddSingleton<JwtTokenGenerator>();
-    
+
+//custom Authorization
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("VerifiedCustomerOnly", policy =>
+    {
+        policy.RequireAssertion(context =>
+        {
+            var status = context.User.FindFirst("verificationStatus")?.Value;
+            return status == nameof(CustomerVerificationStatus.Verified);
+        });
+    });
+
 //app_settings.json
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
@@ -88,17 +102,21 @@ builder.Services.Configure<RefreshTokenSetting>(
 builder.Services.AddDbContext<BankingSystemDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Register repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IEmailVerificationTokenService, EmailVerificationTokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 builder.Services.AddHttpContextAccessor();
 var app = builder.Build();

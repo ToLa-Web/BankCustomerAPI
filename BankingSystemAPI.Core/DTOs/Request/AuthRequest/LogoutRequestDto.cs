@@ -1,4 +1,4 @@
-﻿namespace BankingSystemAPI.Core.DTOs.Request;
+﻿namespace BankingSystemAPI.Core.DTOs.Request.AuthRequest;
 
 public class LogoutRequestDto
 {

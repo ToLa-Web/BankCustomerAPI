@@ -1,4 +1,5 @@
-﻿using BankingSystemAPI.Core.Enums;
+﻿using System.Text.Json.Serialization;
+using BankingSystemAPI.Core.Enums;
 
 namespace BankingSystemAPI.Core.DTOs.Response;
 
@@ -7,6 +8,7 @@ public class UserResponseDto
     public int UserId { get; set; }
     public string? Username { get; set; } = string.Empty;
     public string? Email { get; set; } = string.Empty;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public UserRole  Role { get; set; }
     public bool IsEmailVerified {get; set;}
     public bool IsActive { get; set; }
