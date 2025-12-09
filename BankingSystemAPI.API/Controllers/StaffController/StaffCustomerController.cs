@@ -1,4 +1,5 @@
-﻿using BankingSystemAPI.Core.Interfaces.Services;
+﻿using System.Security.Claims;
+using BankingSystemAPI.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +16,7 @@ public class StaffCustomerController : ControllerBase
         _customerService = customerService;
     }
 
-    private int StaffId => int.Parse(User.FindFirst("id")!.Value);
+    private int StaffId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
     // Get all customers
     [HttpGet]

@@ -15,12 +15,19 @@ public class CustomerService : ICustomerService
     private readonly ICustomerRepository _customerRepo;
     private readonly IAuditLogService  _auditLogService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEmailService  _emailService;
 
-    public CustomerService(ICustomerRepository customerRepo, IAuditLogService auditLogService, IUnitOfWork unitOfWork)
+    public CustomerService(
+        ICustomerRepository customerRepo, 
+        IAuditLogService auditLogService, 
+        IUnitOfWork unitOfWork, 
+        IEmailService emailService
+        )
     {
         _customerRepo = customerRepo;
         _auditLogService = auditLogService;
         _unitOfWork = unitOfWork;
+        _emailService = emailService;
     }
 
     // CREATE CUSTOMER PROFILE
@@ -123,12 +130,25 @@ public class CustomerService : ICustomerService
         if (customer == null)
             return Result<CustomerDto>.Fail("Customer not found.");
         
+        if (customer.User == null)
+            return Result<CustomerDto>.Fail("User not found.");
+        
+        if (string.IsNullOrWhiteSpace(customer.User.Email))
+            return Result<CustomerDto>.Fail("Customer email is missing.");
+        
         customer.VerificationStatus = CustomerVerificationStatus.Verified;
         customer.VerifiedByUserId = performedByUserId;
         customer.VerifiedAt = DateTime.Now;
 
-        await _auditLogService.LogAsync(performedByUserId, $"Approved customer id : {customerId} by user id : {performedByUserId}", null, null);
+        await _auditLogService.LogAsync(performedByUserId,
+            $"Approved customer id : {customerId} by user id : {performedByUserId}",
+            null,
+            null);
         await _unitOfWork.SaveChangesAsync();
+        
+        // Send email to customer 
+        await _emailService.SendCustomerApprovedEmailAsync(customer.User.Email,
+            $"{customer.FirstName} {customer.LastName}");
         
         return Result<CustomerDto>.SuccessResult(CustomerMapper.MapToCustomerDto(customer));
     }
@@ -140,12 +160,22 @@ public class CustomerService : ICustomerService
         if (customer == null)
             return Result<CustomerDto>.Fail("Customer not found.");
         
+        if (customer.User == null)
+            return Result<CustomerDto>.Fail("User not found.");
+        
+        if (string.IsNullOrWhiteSpace(customer.User.Email))
+            return Result<CustomerDto>.Fail("Customer email is missing.");
+        
         customer.VerificationStatus = CustomerVerificationStatus.Rejected;
         customer.VerifiedByUserId = performedByUserId;
         customer.VerifiedAt = DateTime.Now;
         
         await _auditLogService.LogAsync(performedByUserId, $"Rejected customer id : {customerId} by user id : {performedByUserId}", null, null);
         await _unitOfWork.SaveChangesAsync();
+        
+        // send email to customer
+        await _emailService.SendCustomerRejectedEmailAsync(customer.User.Email,
+            $"{customer.FirstName} {customer.LastName}");
         
         return Result<CustomerDto>.SuccessResult(CustomerMapper.MapToCustomerDto(customer));
     }

@@ -15,12 +15,12 @@ public class CustomerRepository : ICustomerRepository
     }
     public async Task<Customer?> GetByUserIdAsync(int userId)
     {
-        return await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+        return await _context.Customers.Include(c => c.User).FirstOrDefaultAsync(c => c.UserId == userId);
     }
 
     public async Task<Customer?> GetByIdAsync(int customerId)
     {
-        return await _context.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.CustomerId == customerId);
+        return await _context.Customers.AsNoTracking().Include(c => c.User).FirstOrDefaultAsync(c => c.CustomerId == customerId);
     }
     
     public async Task<IEnumerable<Customer>> GetAllAsync()

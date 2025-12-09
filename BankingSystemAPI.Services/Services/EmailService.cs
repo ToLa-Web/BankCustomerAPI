@@ -67,4 +67,35 @@ public class EmailService : IEmailService
 
         await SendEmailAsync(toEmail, subject, body);
     }
+    
+    public async Task SendCustomerApprovedEmailAsync(string toEmail, string fullName)
+    {
+        var subject = "Your Account Verification is Approved";
+        var body = $@"
+        <h2>Hello {fullName},</h2>
+        <p>We are pleased to inform you that your verification has been completed successfully.</p>
+        <p>You now have full access to the banking system.</p>
+        <br />
+        <p>Regards,</p>
+        <p>Banking System Team</p>
+    ";
+
+        await SendEmailAsync(toEmail, subject, body);
+    }
+
+    public async Task SendCustomerRejectedEmailAsync(string toEmail, string fullName)
+    {
+        var subject = "Your Account Verification has been Rejected";
+        var body = $@"
+        <h2>Hello {fullName},</h2>
+        <p>Unfortunately, we are unable to approve your verification request at this time.</p>
+        <p>Please recheck your information or contact support for assistance.</p>
+        <br />
+        <p>Regards,</p>
+        <p>Banking System Team</p>
+    ";
+
+        await SendEmailAsync(toEmail, subject, body);
+    }
+
 }

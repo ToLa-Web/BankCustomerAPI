@@ -1,4 +1,5 @@
-﻿using BankingSystemAPI.Core.DTOs.Request.UserRequest;
+﻿using System.Security.Claims;
+using BankingSystemAPI.Core.DTOs.Request.UserRequest;
 using BankingSystemAPI.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +17,7 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
-    private int UserId => int.Parse(User.FindFirst("id")!.Value);
+    private int UserId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
     [HttpGet("profile")]
     public async Task<IActionResult> GetProfile()

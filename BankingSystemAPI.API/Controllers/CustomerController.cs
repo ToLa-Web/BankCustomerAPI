@@ -1,4 +1,5 @@
-﻿using BankingSystemAPI.Core.DTOs.Request.CustomerRequest;
+﻿using System.Security.Claims;
+using BankingSystemAPI.Core.DTOs.Request.CustomerRequest;
 using BankingSystemAPI.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +16,7 @@ public class CustomerController : ControllerBase
         _customerService = customerService;
     }
     
-    private int UserId => int.Parse(User.FindFirst("id")!.Value);
+    private int UserId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
     // CREATE CUSTOMER PROFILE (Onboarding)
     [Authorize]
@@ -30,13 +31,12 @@ public class CustomerController : ControllerBase
 
     // UPDATE MY PROFILE AS CUSTOMER  (Locked after Verification)
     [Authorize]
-    [HttpPut("UpdateCustomer")]
+    [HttpPut("update-profile")]
     public async Task<IActionResult> UpdateCustomerProfile([FromBody] UpdateCustomerDto customerDto)
     {
         var (ip, device) = GetRequestInfo();
         var result = await _customerService.UpdateCustomerProfileAsync(UserId, customerDto, ip, device);
-        
-        return result.Success ? Ok(result) : BadRequest();
+        return Ok(result);
     }
 
     //GET MY PROFILE AS CUSTOMER

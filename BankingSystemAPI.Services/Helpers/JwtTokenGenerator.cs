@@ -31,10 +31,11 @@ namespace BankingSystemAPI.Services.Helpers
             // Use a List<Claim> so we can add more later
             var claims = new List<Claim>
             {
-                new Claim("id", user.UserId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim("username", user.Username),
-                new Claim(ClaimTypes.Role, user.Role.ToString())
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim("tokenVersion", user.TokenVersion.ToString()),
             };
 
             // -------------------------------------------
