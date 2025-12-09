@@ -1,4 +1,5 @@
-﻿using BankingSystemAPI.Core.DTOs.Request.UserRequest;
+﻿using System.Security.Claims;
+using BankingSystemAPI.Core.DTOs.Request.UserRequest;
 using BankingSystemAPI.Core.Enums;
 using BankingSystemAPI.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +19,7 @@ namespace BankingSystemAPI.API.Controllers.AdminController;
             _userService = userService;
         }
 
-        private int AdminId => int.Parse(User.FindFirst("id")!.Value);
+        private int AdminId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
         //Get all users profile
         [HttpGet]
@@ -27,11 +28,18 @@ namespace BankingSystemAPI.API.Controllers.AdminController;
             return Ok(await _userService.GetAllAsync());
         }
 
-        //Get user profile
+        //Get admin user profile
         [HttpGet("profile")]
         public async Task<IActionResult> GetProfile()
         {
             var user = await _userService.GetByIdAsync(AdminId);
+            return user == null ? NotFound() : Ok(user);
+        }
+        
+        [HttpGet("profile/{userId:int}")]
+        public async Task<IActionResult> GetUserProfile(int userId)
+        {
+            var user = await _userService.GetByIdAsync(userId);
             return user == null ? NotFound() : Ok(user);
         }
 
@@ -42,13 +50,21 @@ namespace BankingSystemAPI.API.Controllers.AdminController;
             var result = await _userService.UpdateAsync(userId, dto);
             return Ok(result);
         }
+        
+        //Update role user
+        [HttpPut("{userId:int}/role")]
+        public async Task<IActionResult> ChangeUserRole(int userId, ChangeRoleDto dto)
+        {
+            var result = await _userService.ChangeUserRoleAsync(userId, dto, AdminId);
+            return Ok(result);
+        }
 
         //Delete user
         [HttpDelete("{userId:int}")]
         public async Task<IActionResult> DeleteUser(int userId)
         {
             var result = await _userService.DeleteAsync(userId, UserRole.Administrator);
-            return result.Success ? Ok(result) : BadRequest(result);
+            return Ok(result);
         }
     }
     

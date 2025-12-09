@@ -16,6 +16,7 @@ public class User
     public string? VerificationToken { get; set; }
     public bool IsActive { get; set; } = true;
     public bool IsDeleted { get; set; } = false; // Soft delete
+    public int TokenVersion { get; set; } = 1;
     public DateTime CreatedAt { get; set; } =  DateTime.UtcNow;
     
     public DateTime? LastLoginAt { get; set; }

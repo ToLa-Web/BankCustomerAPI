@@ -1,4 +1,5 @@
 using System.Text;
+using BankingSystemAPI.API.Middleware;
 using BankingSystemAPI.Core.Enums;
 using BankingSystemAPI.Core.Interfaces;
 using BankingSystemAPI.Core.Interfaces.Repositories;
@@ -136,6 +137,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+
+app.UseMiddleware<TokenVersionMiddleware>();
 
 app.UseAuthorization();
 
