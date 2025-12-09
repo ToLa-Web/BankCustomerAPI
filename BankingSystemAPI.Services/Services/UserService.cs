@@ -1,6 +1,7 @@
 ﻿using BankingSystemAPI.Core.DTOs.Request.UserRequest;
 using BankingSystemAPI.Core.DTOs.Response;
 using BankingSystemAPI.Core.Enums;
+using BankingSystemAPI.Core.Interfaces;
 using BankingSystemAPI.Core.Interfaces.Repositories;
 using BankingSystemAPI.Core.Interfaces.Services;
 using BankingSystemAPI.Services.Mappings;
@@ -10,10 +11,14 @@ namespace BankingSystemAPI.Services.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IAuditLogService _auditLogService;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(IUserRepository userRepository, IAuditLogService auditLogService,  IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
+        _auditLogService = auditLogService;
+        _unitOfWork = unitOfWork;
     }
 
     //Get user by id
@@ -75,6 +80,22 @@ public class UserService : IUserService
         await _userRepository.UpdateAsync(existing);
         
         return UserMapper.ToUserResponseDto(existing);
+    }
+
+    public async Task<ResultDto> ChangeUserRoleAsync(int userId, ChangeRoleDto dto, int adminId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+            throw new KeyNotFoundException("User not found.");
+
+        user.Role = dto.NewRole;
+        user.TokenVersion++;
+        
+        await _auditLogService.LogAsync(adminId, $"Change user role by admin Id: {adminId}", null, null);
+        await _userRepository.UpdateAsync(user);
+        await _unitOfWork.SaveChangesAsync();
+        
+        return new ResultDto { Success = true, Message = "User successfully changed." };
     }
     
     //Delete user performedByRole
