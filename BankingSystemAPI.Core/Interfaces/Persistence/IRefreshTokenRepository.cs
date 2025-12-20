@@ -1,6 +1,6 @@
 ﻿using BankingSystemAPI.Core.Entities;
 
-namespace BankingSystemAPI.Core.Interfaces.Repositories;
+namespace BankingSystemAPI.Core.Interfaces.Persistence;
 
 public interface IRefreshTokenRepository
 {

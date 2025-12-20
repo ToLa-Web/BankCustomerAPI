@@ -1,10 +1,10 @@
 ﻿using System.Security.Claims;
 using BankingSystemAPI.Core.DTOs.Request.CustomerRequest;
-using BankingSystemAPI.Core.Interfaces.Services;
+using BankingSystemAPI.Core.Interfaces.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BankingSystemAPI.API.Controllers;
+namespace BankingSystemAPI.API.Controllers.CustomerController;
 [ApiController]
 [Route("api/[controller]")]
 public class CustomerController : ControllerBase

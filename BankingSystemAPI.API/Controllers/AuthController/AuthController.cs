@@ -1,11 +1,10 @@
-﻿using BankingSystemAPI.Core.DTOs.Request;
-using BankingSystemAPI.Core.DTOs.Request.AuthRequest;
+﻿using BankingSystemAPI.Core.DTOs.Request.AuthRequest;
 using BankingSystemAPI.Core.DTOs.Request.UserRequest;
-using BankingSystemAPI.Core.Interfaces.Services;
+using BankingSystemAPI.Core.Interfaces.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BankingSystemAPI.API.Controllers;
+namespace BankingSystemAPI.API.Controllers.AuthController;
 [ApiController]
 [Route("api/[controller]")]
 [AllowAnonymous]

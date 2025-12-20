@@ -1,7 +1,7 @@
 ﻿using BankingSystemAPI.Core.Entities;
 using BankingSystemAPI.Core.Enums;
-using BankingSystemAPI.Core.Interfaces.Repositories;
-using BankingSystemAPI.Core.Interfaces.Services;
+using BankingSystemAPI.Core.Interfaces.Application;
+using BankingSystemAPI.Core.Interfaces.Persistence;
 
 namespace BankingSystemAPI.Services.Services;
 

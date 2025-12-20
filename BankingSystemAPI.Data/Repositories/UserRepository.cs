@@ -1,5 +1,5 @@
 ﻿using BankingSystemAPI.Core.Entities;
-using BankingSystemAPI.Core.Interfaces.Repositories;
+using BankingSystemAPI.Core.Interfaces.Persistence;
 using BankingSystemAPI.Data.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,12 +22,14 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByEmailAsync(string email)
     {
         return await _context.Users
+            .Include(u => u.Customer)
             .FirstOrDefaultAsync(u => u.Email == email);
     }
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
         return await _context.Users
+            .Include(u => u.Customer)
             .FirstOrDefaultAsync(u => u.Username == username);
     }
 

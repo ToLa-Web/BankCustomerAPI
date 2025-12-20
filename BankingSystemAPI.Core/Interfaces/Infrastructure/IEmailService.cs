@@ -1,4 +1,4 @@
-﻿namespace BankingSystemAPI.Core.Interfaces.Services;
+﻿namespace BankingSystemAPI.Core.Interfaces.Infrastructure;
 
 public interface IEmailService
 {

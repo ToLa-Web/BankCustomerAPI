@@ -41,10 +41,24 @@ namespace BankingSystemAPI.Services.Helpers
             // -------------------------------------------
             // ADD VERIFICATION STATUS CLAIM FOR CUSTOMER
             // -------------------------------------------
-            claims.Add(user.Customer != null
-                ? new Claim("verificationStatus", user.Customer.VerificationStatus.ToString())
-                // User has no customer profile yet → Default None
-                : new Claim("verificationStatus", nameof(CustomerVerificationStatus.None)));
+            if (user.Customer != null)
+            {
+                claims.Add(new Claim(
+                    "verificationStatus",
+                    user.Customer.VerificationStatus.ToString()));
+
+                claims.Add(new Claim(
+                    "isActive",
+                    user.Customer.Status == CustomerStatus.Active ? "true" : "false"));
+            }
+            else
+            {
+                claims.Add(new Claim(
+                    "verificationStatus",
+                    nameof(CustomerVerificationStatus.None)));
+
+                claims.Add(new Claim("isActive", "false"));
+            }
 
             var token = new JwtSecurityToken(
                 issuer: issuer,

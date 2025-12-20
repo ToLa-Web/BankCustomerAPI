@@ -1,26 +1,24 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using BankingSystemAPI.Core.Enums;
 
 namespace BankingSystemAPI.Core.Entities;
 
 public class Account
 {
-    [Key]
     public int AccountId { get; set; } //PK
+    public int CustomerId { get; set; } 
     
-    // public string AccountNumber { get; set; } =  string.Empty;
-    //
-    // public string AccountType { get; set; } =  string.Empty; //saving, checking etc...
-    //
-    // public decimal Balance { get; set; } = decimal.Zero;
-    //
-    public int CustomerId { get; set; } //FK 
-    //
-    // public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    //
-    // public bool IsActive { get; set; } = true;
-    //
-    // //Navigation property
+    public string AccountNumber { get; set; } =  string.Empty;
+    public AccountType AccountType { get; set; } //saving, checking etc...
+    public decimal Balance { get; set; } = decimal.Zero;
+    
+    public string Currency { get; set; } = "USD";
+    
+    public decimal InterestRate { get; set; }
+    public DateTime? MaturityDate { get; set; } // Only used for FixedDeposit
+    public bool IsActive { get; set; } = true;
+    
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
     public Customer? Customer { get; set; } 
-    public ICollection<Transaction> Transactions { get; set; } =  new List<Transaction>(); // One to Many
+    public ICollection<Transaction> Transactions { get; set; } =  new List<Transaction>();
 }

@@ -2,7 +2,7 @@
 using BankingSystemAPI.Core.DTOs.Response;
 using BankingSystemAPI.Core.Enums;
 
-namespace BankingSystemAPI.Core.Interfaces.Services;
+namespace BankingSystemAPI.Core.Interfaces.Application;
 
 public interface IUserService
 {

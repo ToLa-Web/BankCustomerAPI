@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using BankingSystemAPI.Core.DTOs.Request.UserRequest;
 using BankingSystemAPI.Core.Enums;
-using BankingSystemAPI.Core.Interfaces.Services;
+using BankingSystemAPI.Core.Interfaces.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

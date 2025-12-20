@@ -1,5 +1,5 @@
 ﻿using BankingSystemAPI.Core.Entities;
-using BankingSystemAPI.Core.Interfaces.Repositories;
+using BankingSystemAPI.Core.Interfaces.Persistence;
 using BankingSystemAPI.Data.Context;
 using Microsoft.EntityFrameworkCore;
 

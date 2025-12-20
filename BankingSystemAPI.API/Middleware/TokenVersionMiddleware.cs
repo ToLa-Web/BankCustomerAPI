@@ -1,5 +1,5 @@
 ﻿using System.Security.Claims;
-using BankingSystemAPI.Core.Interfaces.Repositories;
+using BankingSystemAPI.Core.Interfaces.Persistence;
 
 namespace BankingSystemAPI.API.Middleware;
 

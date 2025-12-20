@@ -1,10 +1,10 @@
 ﻿using System.Security.Claims;
 using BankingSystemAPI.Core.DTOs.Request.UserRequest;
-using BankingSystemAPI.Core.Interfaces.Services;
+using BankingSystemAPI.Core.Interfaces.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BankingSystemAPI.API.Controllers;
+namespace BankingSystemAPI.API.Controllers.UserController;
 [ApiController]
 [Authorize]
 [Route("api/user")]
@@ -33,5 +33,15 @@ public class UserController : ControllerBase
         var result = await _userService.UpdateProfileAsync(UserId, dto);
 
         return Ok(result);
+    }
+    
+    [HttpGet("debug/claims")]
+    public IActionResult DebugClaims()
+    {
+        return Ok(User.Claims.Select(c => new
+        {
+            c.Type,
+            c.Value
+        }));
     }
 }

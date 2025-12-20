@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Net.Mail;
-using BankingSystemAPI.Core.Interfaces.Services;
+using BankingSystemAPI.Core.Interfaces.Infrastructure;
 using BankingSystemAPI.Core.settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;

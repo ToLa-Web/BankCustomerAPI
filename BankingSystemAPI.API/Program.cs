@@ -1,9 +1,11 @@
+using System.Security.Claims;
 using System.Text;
 using BankingSystemAPI.API.Middleware;
 using BankingSystemAPI.Core.Enums;
 using BankingSystemAPI.Core.Interfaces;
-using BankingSystemAPI.Core.Interfaces.Repositories;
-using BankingSystemAPI.Core.Interfaces.Services;
+using BankingSystemAPI.Core.Interfaces.Application;
+using BankingSystemAPI.Core.Interfaces.Infrastructure;
+using BankingSystemAPI.Core.Interfaces.Persistence;
 using BankingSystemAPI.Core.settings;
 using BankingSystemAPI.Data;
 using BankingSystemAPI.Data.Context;
@@ -86,10 +88,23 @@ builder.Services.AddSingleton<JwtTokenGenerator>();
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("VerifiedCustomerOnly", policy =>
     {
+        policy.RequireAuthenticatedUser();
+
         policy.RequireAssertion(context =>
         {
-            var status = context.User.FindFirst("verificationStatus")?.Value;
-            return status == nameof(CustomerVerificationStatus.Verified);
+            var verificationStatus =
+                context.User.FindFirst("verificationStatus")?.Value;
+
+            var role =
+                context.User.FindFirst(ClaimTypes.Role)?.Value;
+
+            var isActive =
+                context.User.FindFirst("isActive")?.Value;
+            
+            return
+                role == "Customer" &&
+                verificationStatus == nameof(CustomerVerificationStatus.Verified) &&
+                isActive == "true";
         });
     });
 
@@ -110,6 +125,7 @@ builder.Services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationT
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -118,6 +134,7 @@ builder.Services.AddScoped<IEmailVerificationTokenService, EmailVerificationToke
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 builder.Services.AddHttpContextAccessor();
 var app = builder.Build();

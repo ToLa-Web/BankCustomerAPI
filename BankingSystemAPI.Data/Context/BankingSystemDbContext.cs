@@ -25,35 +25,6 @@ public class BankingSystemDbContext : DbContext
         modelBuilder.ApplyConfiguration(new EmailVerificationTokenConfiguration());
         modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
         modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
-
-
-        // //User Configuration
-        // modelBuilder.Entity<Customer>()
-        //     .HasIndex(c => c.Email)
-        //     .IsUnique();
-        //
-        // // Account Configuration
-        // modelBuilder.Entity<Account>()
-        //     .HasIndex(a => a.AccountNumber)
-        //     .IsUnique();
-        //
-        // modelBuilder.Entity<Account>()
-        //     .HasOne(a => a.Customer)
-        //     .WithMany(c => c.Accounts)
-        //     .HasForeignKey(a => a.CustomerId)
-        //     .OnDelete(DeleteBehavior.Cascade);
-        //
-        // // Transaction Configuration
-        // modelBuilder.Entity<Transaction>()
-        //     .HasOne(t => t.Account)
-        //     .WithMany(a => a.Transactions)
-        //     .HasForeignKey(t => t.AccountId)
-        //     .OnDelete(DeleteBehavior.Restrict);
-        //
-        // modelBuilder.Entity<Transaction>()
-        //     .HasOne(t => t.ToAccount)
-        //     .WithMany()
-        //     .HasForeignKey(t => t.ToAccountId)
-        //     .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.ApplyConfiguration(new AccountConfiguration());
     }
 }

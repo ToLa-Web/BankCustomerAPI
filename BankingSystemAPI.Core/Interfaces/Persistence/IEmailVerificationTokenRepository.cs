@@ -1,7 +1,7 @@
 ﻿using BankingSystemAPI.Core.Entities;
 using BankingSystemAPI.Core.Enums;
 
-namespace BankingSystemAPI.Core.Interfaces.Repositories;
+namespace BankingSystemAPI.Core.Interfaces.Persistence;
 
 public interface IEmailVerificationTokenRepository
 {

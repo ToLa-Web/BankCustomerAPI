@@ -6,7 +6,7 @@ namespace BankingSystemAPI.Core.Entities;
 public class Transaction
 {
     public int TransactionId { get; set; }
-    // public int AccountId { get; set; }
+    public int AccountId { get; set; }
     // public int? ToAccountId { get; set; } // for transfer
     // public string TransactionType { get; set; } = string.Empty; // Deposit, Withdraw, Transfer
     // public decimal Amount { get; set; } = decimal.Zero;
@@ -15,6 +15,6 @@ public class Transaction
     //
     // public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
     //
-    // public required Account Account { get; set; }
-    // public Account? ToAccount { get; set; } 
+    public Account? Account { get; set; }
+    public Account? ToAccount { get; set; } 
 }

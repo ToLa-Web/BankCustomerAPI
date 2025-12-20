@@ -1,7 +1,7 @@
 ﻿using BankingSystemAPI.Core.DTOs.Request.CustomerRequest;
 using BankingSystemAPI.Core.DTOs.Response;
 
-namespace BankingSystemAPI.Core.Interfaces.Services;
+namespace BankingSystemAPI.Core.Interfaces.Application;
 
 public interface ICustomerService
 {

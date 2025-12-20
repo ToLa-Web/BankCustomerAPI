@@ -1,7 +1,7 @@
 ﻿using BankingSystemAPI.Core.DTOs.Response;
 using BankingSystemAPI.Core.Entities;
-using BankingSystemAPI.Core.Interfaces.Repositories;
-using BankingSystemAPI.Core.Interfaces.Services;
+using BankingSystemAPI.Core.Interfaces.Application;
+using BankingSystemAPI.Core.Interfaces.Persistence;
 using UAParser;
 
 namespace BankingSystemAPI.Services.Services;
