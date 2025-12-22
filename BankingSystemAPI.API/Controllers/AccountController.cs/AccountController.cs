@@ -70,5 +70,15 @@ public class AccountController : ControllerBase
         var device = HttpContext.Request.Headers.UserAgent.ToString();
         return (ip, device);
     }
-    
+
+    [HttpGet("{accountId}/transactions")]
+    public async Task<IActionResult> GetTransactions(
+        int accountId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var result = await _accountService.GetAccountTransactionsAsync(CustomerId, accountId, page, pageSize);
+        return Ok(result);
+    }
+     
 }

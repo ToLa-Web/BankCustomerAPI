@@ -12,6 +12,7 @@ using BankingSystemAPI.Data.Context;
 using BankingSystemAPI.Data.Repositories;
 using BankingSystemAPI.Services.Helpers;
 using BankingSystemAPI.Services.Services;
+using BankingSystemAPI.Services.Services.Infrastructure.CurrencyExchange;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -126,6 +127,7 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -135,6 +137,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+
+//Infrastructure
+builder.Services.AddHttpClient<ICurrencyExchangeService, CurrencyExchangeService>();
 
 builder.Services.AddHttpContextAccessor();
 var app = builder.Build();

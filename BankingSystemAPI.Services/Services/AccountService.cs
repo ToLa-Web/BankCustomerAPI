@@ -7,6 +7,7 @@ using BankingSystemAPI.Core.Interfaces;
 using BankingSystemAPI.Core.Interfaces.Application;
 using BankingSystemAPI.Core.Interfaces.Persistence;
 using BankingSystemAPI.Services.Mappings;
+using BankingSystemAPI.Services.Services.Helper;
 using BankingSystemAPI.Services.Validators;
 
 namespace BankingSystemAPI.Services.Services;
@@ -15,18 +16,21 @@ public class AccountService : IAccountService
 {
     private readonly IAccountRepository _accountRepo;
     private readonly ICustomerRepository _customerRepo;
+    private readonly ITransactionRepository _transactionRepo;
     private readonly IAuditLogService _auditLogService;
     private readonly IUnitOfWork _unitOfWork;
 
     public AccountService(
         IAccountRepository accountRepo,
         ICustomerRepository customerRepo, 
+        ITransactionRepository transactionRepo,
         IAuditLogService auditLogService,
         IUnitOfWork unitOfWork
         )
     {
         _accountRepo = accountRepo;
         _customerRepo = customerRepo;
+        _transactionRepo = transactionRepo;
         _auditLogService = auditLogService;
         _unitOfWork = unitOfWork;
     }
@@ -86,12 +90,27 @@ public class AccountService : IAccountService
         if (!account.IsActive)
             return Result<AccountDto>.Fail("Account is inactive");
         
+        var balanceBefore = account.Balance;
         account.Balance += depositAmount;
         account.UpdatedAt = DateTime.UtcNow;
-        
-        _accountRepo.Update(account);
-        await _auditLogService.LogAsync(account.CustomerId, $"Account deposited {depositAmount}$", ip, device);
-        await _unitOfWork.SaveChangesAsync();
+
+        var transaction = TransactionFactory.Create(
+            account,
+            TransactionType.Deposit,
+            depositAmount,
+            balanceBefore,
+            account.Balance,
+            "Cash deposit");
+        await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        {
+            _accountRepo.Update(account);
+            await _transactionRepo.AddAsync(transaction);
+            await _auditLogService.LogAsync(
+                account.CustomerId,
+                $"Account deposited {depositAmount}$",
+                ip,
+                device);
+        });
         
         return Result<AccountDto>.SuccessResult(AccountMapper.MapToAccountDto(account), 
             "Deposit successful");
@@ -115,12 +134,28 @@ public class AccountService : IAccountService
         if (account.Balance < withdrawAmount)
             return Result<AccountDto>.Fail("Insufficient balance");
         
+        var balanceBefore = account.Balance;
         account.Balance -= withdrawAmount;
         account.UpdatedAt = DateTime.UtcNow;
-        
-        _accountRepo.Update(account);
-        await _auditLogService.LogAsync(account.CustomerId, $"Account withdrawal {withdrawAmount}$ successful", ip, device);
-        await _unitOfWork.SaveChangesAsync();
+
+        var transaction = TransactionFactory.Create(
+            account,
+            TransactionType.Withdrawal,
+            withdrawAmount,
+            balanceBefore,
+            account.Balance,
+            "Cash withdrawal");
+
+        await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        {
+            _accountRepo.Update(account);
+            await _transactionRepo.AddAsync(transaction);
+            await _auditLogService.LogAsync(
+                account.CustomerId,
+                $"Account withdrawal {withdrawAmount}$",
+                ip,
+                device);
+        });
         
         return Result<AccountDto>.SuccessResult(AccountMapper.MapToAccountDto(account),
             "Withdrawal successful");
@@ -207,6 +242,44 @@ public class AccountService : IAccountService
         var accountsDto = accountsResult.Select(AccountMapper.MapToAccountAdminDto).ToList();
         return accountsDto.Count == 0 ? Result<IEnumerable<AccountAdminDto>>.Fail("Account not found") :
             Result<IEnumerable<AccountAdminDto>>.SuccessResult(accountsDto);
+    }
+
+    public async Task<Result<PagedResult<TransactionDto>>> GetAccountTransactionsAsync(
+        int userId,
+        int accountId,
+        int page,
+        int pageSize)
+    {
+        if (page <= 0 ||  pageSize <= 0)
+            return Result<PagedResult<TransactionDto>>.Fail("Invalid pagination parameters");
+        var customer = await _customerRepo.GetByIdAsync(userId);
+        if (customer == null)
+            return Result<PagedResult<TransactionDto>>.Fail("Customer not found");
+        
+        var account = await _accountRepo.GetByIdAsync(accountId);
+        if (account == null || account.CustomerId != customer.CustomerId)
+            return Result<PagedResult<TransactionDto>>.Fail("Access denied");
+        
+        var pageTransactions = await _transactionRepo.GetByAccountIdAsync(accountId, page, pageSize);
+        var dtoResult = new PagedResult<TransactionDto>
+        {
+            Page = pageTransactions.Page,
+            PageSize = pageTransactions.PageSize,
+            TotalCount = pageTransactions.TotalCount,
+            Items = pageTransactions.Items.Select(t => new TransactionDto
+            {
+                TransactionId = t.TransactionId,
+                TransactionType = t.TransactionType.ToString(),
+                Amount = t.Amount,
+                BalanceBefore = t.BalanceBefore,
+                BalanceAfter = t.BalanceAfter,
+                Description = t.Description,
+                Status = t.Status,
+                CreatedAt = t.CreatedAt,
+            })
+        };
+        
+        return Result<PagedResult<TransactionDto>>.SuccessResult(dtoResult);
     }
 
     private static string GenerateAccountNumber()

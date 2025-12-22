@@ -17,5 +17,10 @@ public interface IAccountService
     Task<Result<IEnumerable<AccountAdminDto>>> GetAccountsAsync(int? customerId, bool? isActive);
     Task<Result<IEnumerable<AccountAdminDto>>> GetInactiveAccounts();
     Task<Result<IEnumerable<AccountAdminDto>>> GetAccountsTypeAsync(int? customerId, AccountType? accountType);
+    Task<Result<PagedResult<TransactionDto>>> GetAccountTransactionsAsync(
+            int userId,
+            int accountId,
+            int page,
+            int pageSize);
 }
 
