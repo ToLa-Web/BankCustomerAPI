@@ -20,7 +20,7 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .HasMaxLength(255);
         builder.Property(t => t.RecipientAccount)
             .HasMaxLength(50);
-        builder.Property(t => t.RecipientName)
+        builder.Property(t => t.RecipientAccountName)
             .HasMaxLength(100);
         builder.HasOne(t => t.Account)
             .WithMany(a => a.Transactions)

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BankingSystemAPI.API.Controllers.AccountController.cs;
 
-[Authorize(Roles = "Customer")]
+[Authorize(Roles = "Customer,Administrator")]
 [Authorize(Policy = "VerifiedCustomerOnly")]
 [Route("api/account")]
 [ApiController]
@@ -64,11 +64,14 @@ public class AccountController : ControllerBase
         
         return result.Success ? Ok(result) : BadRequest(result.Message);
     }
-    private (string? ip, string? device) GetRequestInfo()
+     
+    [HttpPost("transfer")]
+    public async Task<IActionResult> Transfer([FromBody] TransferRequestDto transferDto)
     {
-        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var device = HttpContext.Request.Headers.UserAgent.ToString();
-        return (ip, device);
+        var (ip, device) = GetRequestInfo();
+        var result = await _accountService.TransferAsync(CustomerId, transferDto, ip, device);
+        
+        return result.Success ? Ok(result) : BadRequest(result.Message);
     }
 
     [HttpGet("{accountId}/transactions")]
@@ -81,4 +84,11 @@ public class AccountController : ControllerBase
         return Ok(result);
     }
      
+    
+    private (string? ip, string? device) GetRequestInfo()
+         {
+             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+             var device = HttpContext.Request.Headers.UserAgent.ToString();
+             return (ip, device);
+         }
 }

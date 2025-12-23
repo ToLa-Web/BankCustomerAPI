@@ -1,6 +1,7 @@
 ﻿using BankingSystemAPI.Core.DTOs.Request.AccountRequest;
 using BankingSystemAPI.Core.DTOs.Response;
 using BankingSystemAPI.Core.DTOs.Response.Account;
+using BankingSystemAPI.Core.DTOs.Response.Transfer;
 using BankingSystemAPI.Core.Entities;
 using BankingSystemAPI.Core.Enums;
 using BankingSystemAPI.Core.Interfaces;
@@ -35,9 +36,9 @@ public class AccountService : IAccountService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result<AccountDto>> CreateAccountAsync(int customerId, CreateAccountDto dto, string? ip, string? device)
+    public async Task<Result<AccountDto>> CreateAccountAsync(int userId, CreateAccountDto dto, string? ip, string? device)
     {
-        var customerExists = await _customerRepo.GetByIdAsync(customerId);
+        var customerExists = await _customerRepo.GetByUserIdAsync(userId);
         if (customerExists == null)
             return Result<AccountDto>.Fail("Customer not found");
         var validation = CreateAccountValidator.Validate(dto);
@@ -48,7 +49,7 @@ public class AccountService : IAccountService
 
         var account = new Account
         {
-            CustomerId = customerId,
+            CustomerId = customerExists.CustomerId,
             AccountNumber = GenerateAccountNumber(),
             AccountType = dto.AccountType,
             Currency = dto.Currency,
@@ -72,7 +73,7 @@ public class AccountService : IAccountService
         }
 
         await _accountRepo.AddAsync(account);
-        await _auditLogService.LogAsync(customerId, "Account created", ip, device);
+        await _auditLogService.LogAsync(userId, "Account created", ip, device);
         await _unitOfWork.SaveChangesAsync();
 
         return Result<AccountDto>.SuccessResult(AccountMapper.MapToAccountDto(account));
@@ -280,6 +281,85 @@ public class AccountService : IAccountService
         };
         
         return Result<PagedResult<TransactionDto>>.SuccessResult(dtoResult);
+    }
+
+    public async Task<Result<TransferResponseDto>> TransferAsync(int userId, TransferRequestDto dto, string? ip, string? device)
+    {
+        if (dto.Amount <= 0)
+            return Result<TransferResponseDto>.Fail("Transfer amount must be greater than 0");
+        if (dto.FromAccountId == dto.ToAccountId)
+            return Result<TransferResponseDto>.Fail("Cannot transfer to the same account");
+        var customer = await _customerRepo.GetByIdAsync(userId);
+        if (customer == null)
+            return Result<TransferResponseDto>.Fail("Customer not found");
+        var sender = await _accountRepo.GetByIdAsync(dto.FromAccountId);
+        var receiver = await _accountRepo.GetByIdAsync(dto.ToAccountId);
+        
+        if (sender == null || receiver == null)
+            return Result<TransferResponseDto>.Fail("Account not found");
+        
+        if (sender.CustomerId != customer.CustomerId)
+            return Result<TransferResponseDto>.Fail("Access denied");
+        
+        if (!sender.IsActive || !receiver.IsActive)
+            return Result<TransferResponseDto>.Fail("One of the accounts is inactive");
+        
+        if (sender.Balance < dto.Amount)
+            return Result<TransferResponseDto>.Fail("Insufficient balance");
+        
+        var senderBefore = sender.Balance;
+        var receiverBefore = receiver.Balance;
+        
+        sender.Balance -= dto.Amount;
+        receiver.Balance += dto.Amount;
+        
+        sender.UpdatedAt =  DateTime.UtcNow;
+        receiver.UpdatedAt =  DateTime.UtcNow;
+
+        var outTransaction = TransactionFactory.Create(
+            sender,
+            TransactionType.TransferOut,
+            dto.Amount,
+            senderBefore,
+            sender.Balance,
+            dto.Description ?? $"Transfer to {receiver.AccountNumber}");
+        outTransaction.RecipientAccountName = receiver.AccountNumber;
+
+        var inTransaction = TransactionFactory.Create(
+            receiver,
+            TransactionType.TransferIn,
+            dto.Amount,
+            receiverBefore,
+            receiver.Balance,
+            dto.Description ?? $"Transfer to {sender.AccountNumber}");
+        inTransaction.RecipientAccountName = sender.AccountNumber;
+
+        await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        {
+            _accountRepo.Update(sender);
+            _accountRepo.Update(receiver);
+
+            await _transactionRepo.AddAsync(outTransaction);
+            await _transactionRepo.AddAsync(inTransaction);
+
+            await _auditLogService.LogAsync(
+                customer.CustomerId,
+                $"Transferred {dto.Amount} from {sender.AccountNumber} to {receiver.AccountNumber}",
+                ip,
+                device);
+        });
+
+        var response = new TransferResponseDto
+        {
+            Reference = outTransaction.TransactionReference,
+            Amount = dto.Amount,
+            Currency = sender.Currency,
+            FromAccount = sender.AccountNumber,
+            ToAccount = receiver.AccountNumber,
+            TransferredAt = outTransaction.CreatedAt,
+        };
+        
+        return Result<TransferResponseDto>.SuccessResult(response,"Transfer success");
     }
 
     private static string GenerateAccountNumber()

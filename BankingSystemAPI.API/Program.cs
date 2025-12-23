@@ -92,7 +92,10 @@ builder.Services.AddAuthorizationBuilder()
         policy.RequireAuthenticatedUser();
 
         policy.RequireAssertion(context =>
-        {
+        { 
+            if (context.User.IsInRole("Administrator"))
+                return true;
+            
             var verificationStatus =
                 context.User.FindFirst("verificationStatus")?.Value;
 

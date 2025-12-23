@@ -19,5 +19,5 @@ public class Transaction
     public Account? Account { get; set; }
     // Transfer-only fields
     public string? RecipientAccount { get; set; }
-    public string? RecipientName { get; set; }
+    public string? RecipientAccountName { get; set; }
 }
