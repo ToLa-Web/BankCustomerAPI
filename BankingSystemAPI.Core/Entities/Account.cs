@@ -16,6 +16,7 @@ public class Account
     public decimal InterestRate { get; set; }
     public DateTime? MaturityDate { get; set; } // Only used for FixedDeposit
     public bool IsActive { get; set; } = true;
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

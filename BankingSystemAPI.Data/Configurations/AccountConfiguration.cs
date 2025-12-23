@@ -35,6 +35,9 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
 
         builder.Property(a => a.IsActive)
             .HasDefaultValue(true);
+        builder.Property(a => a.RowVersion)
+            .IsRowVersion()
+            .IsConcurrencyToken();
         
         builder.Property(x => x.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");

@@ -10,6 +10,7 @@ using BankingSystemAPI.Core.Interfaces.Persistence;
 using BankingSystemAPI.Services.Mappings;
 using BankingSystemAPI.Services.Services.Helper;
 using BankingSystemAPI.Services.Validators;
+using Microsoft.EntityFrameworkCore;
 
 namespace BankingSystemAPI.Services.Services;
 
@@ -102,19 +103,28 @@ public class AccountService : IAccountService
             balanceBefore,
             account.Balance,
             "Cash deposit");
-        await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        try
         {
-            _accountRepo.Update(account);
-            await _transactionRepo.AddAsync(transaction);
-            await _auditLogService.LogAsync(
-                account.CustomerId,
-                $"Account deposited {depositAmount}$",
-                ip,
-                device);
-        });
-        
-        return Result<AccountDto>.SuccessResult(AccountMapper.MapToAccountDto(account), 
-            "Deposit successful");
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                _accountRepo.Update(account);
+                await _transactionRepo.AddAsync(transaction);
+                await _auditLogService.LogAsync(
+                    account.CustomerId,
+                    $"Account deposited {depositAmount}$",
+                    ip,
+                    device);
+            });
+
+            return Result<AccountDto>.SuccessResult(
+                AccountMapper.MapToAccountDto(account),
+                "Deposit successful");
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<AccountDto>.Fail(
+                "Account was modified by another operation. Please try again.");
+        }
     }
 
     public async Task<Result<AccountDto>> WithdrawAsync(int accountId, decimal withdrawAmount, string? ip, string? device)
@@ -147,19 +157,28 @@ public class AccountService : IAccountService
             account.Balance,
             "Cash withdrawal");
 
-        await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        try
         {
-            _accountRepo.Update(account);
-            await _transactionRepo.AddAsync(transaction);
-            await _auditLogService.LogAsync(
-                account.CustomerId,
-                $"Account withdrawal {withdrawAmount}$",
-                ip,
-                device);
-        });
-        
-        return Result<AccountDto>.SuccessResult(AccountMapper.MapToAccountDto(account),
-            "Withdrawal successful");
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                _accountRepo.Update(account);
+                await _transactionRepo.AddAsync(transaction);
+                await _auditLogService.LogAsync(
+                    account.CustomerId,
+                    $"Account withdrawal {withdrawAmount}$",
+                    ip,
+                    device);
+            });
+
+            return Result<AccountDto>.SuccessResult(
+                AccountMapper.MapToAccountDto(account),
+                "Withdrawal successful");
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<AccountDto>.Fail(
+                "Account was modified by another operation. Please try again.");
+        }
     }
 
     public async Task<Result<AccountDto?>> GetAccountByIdAsync(int userId, int accountId)
@@ -334,32 +353,43 @@ public class AccountService : IAccountService
             dto.Description ?? $"Transfer to {sender.AccountNumber}");
         inTransaction.RecipientAccountName = sender.AccountNumber;
 
-        await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        try
         {
-            _accountRepo.Update(sender);
-            _accountRepo.Update(receiver);
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                _accountRepo.Update(sender);
+                _accountRepo.Update(receiver);
 
-            await _transactionRepo.AddAsync(outTransaction);
-            await _transactionRepo.AddAsync(inTransaction);
+                await _transactionRepo.AddAsync(outTransaction);
+                await _transactionRepo.AddAsync(inTransaction);
 
-            await _auditLogService.LogAsync(
-                customer.CustomerId,
-                $"Transferred {dto.Amount} from {sender.AccountNumber} to {receiver.AccountNumber}",
-                ip,
-                device);
-        });
+                await _auditLogService.LogAsync(
+                    customer.CustomerId,
+                    $"Transferred {dto.Amount} from {sender.AccountNumber} to {receiver.AccountNumber}",
+                    ip,
+                    device);
+            });
 
-        var response = new TransferResponseDto
+            var response = new TransferResponseDto
+            {
+                Reference = outTransaction.TransactionReference,
+                Amount = dto.Amount,
+                Currency = sender.Currency,
+                FromAccount = sender.AccountNumber,
+                ToAccount = receiver.AccountNumber,
+                TransferredAt = outTransaction.CreatedAt,
+            };
+
+            return Result<TransferResponseDto>.SuccessResult(
+                response,
+                "Transfer success");
+        }
+        catch (DbUpdateConcurrencyException)
         {
-            Reference = outTransaction.TransactionReference,
-            Amount = dto.Amount,
-            Currency = sender.Currency,
-            FromAccount = sender.AccountNumber,
-            ToAccount = receiver.AccountNumber,
-            TransferredAt = outTransaction.CreatedAt,
-        };
-        
-        return Result<TransferResponseDto>.SuccessResult(response,"Transfer success");
+            return Result<TransferResponseDto>.Fail(
+                "One of the accounts was modified by another operation. Please try again.");
+        }
+
     }
 
     private static string GenerateAccountNumber()
