@@ -1,4 +1,6 @@
 ﻿using BankingSystemAPI.Core.DTOs.Response;
+using BankingSystemAPI.Core.DTOs.Response.Auth;
+using BankingSystemAPI.Core.DTOs.Response.User;
 using BankingSystemAPI.Core.Entities;
 
 namespace BankingSystemAPI.Services.Mappings;

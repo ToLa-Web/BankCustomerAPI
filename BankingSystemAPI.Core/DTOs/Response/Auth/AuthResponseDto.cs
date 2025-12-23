@@ -1,6 +1,6 @@
 ﻿using BankingSystemAPI.Core.Enums;
 
-namespace BankingSystemAPI.Core.DTOs.Response;
+namespace BankingSystemAPI.Core.DTOs.Response.Auth;
 
 public class AuthResponseDto
 {

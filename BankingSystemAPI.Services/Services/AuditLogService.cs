@@ -1,4 +1,5 @@
 ﻿using BankingSystemAPI.Core.DTOs.Response;
+using BankingSystemAPI.Core.DTOs.Response.Audilog;
 using BankingSystemAPI.Core.Entities;
 using BankingSystemAPI.Core.Interfaces.Application;
 using BankingSystemAPI.Core.Interfaces.Persistence;

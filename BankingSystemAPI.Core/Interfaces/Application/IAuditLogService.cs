@@ -1,4 +1,5 @@
 ﻿using BankingSystemAPI.Core.DTOs.Response;
+using BankingSystemAPI.Core.DTOs.Response.Audilog;
 
 namespace BankingSystemAPI.Core.Interfaces.Application;
 

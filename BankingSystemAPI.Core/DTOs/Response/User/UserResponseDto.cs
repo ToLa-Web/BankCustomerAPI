@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using BankingSystemAPI.Core.Enums;
 
-namespace BankingSystemAPI.Core.DTOs.Response;
+namespace BankingSystemAPI.Core.DTOs.Response.User;
 
 public class UserResponseDto
 {

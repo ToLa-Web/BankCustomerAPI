@@ -1,4 +1,5 @@
 ﻿using BankingSystemAPI.Core.DTOs.Response;
+using BankingSystemAPI.Core.DTOs.Response.Customer;
 using BankingSystemAPI.Core.Entities;
 
 namespace BankingSystemAPI.Services.Mappings;

@@ -1,5 +1,6 @@
 ﻿using BankingSystemAPI.Core.DTOs.Request.UserRequest;
 using BankingSystemAPI.Core.DTOs.Response;
+using BankingSystemAPI.Core.DTOs.Response.User;
 using BankingSystemAPI.Core.Enums;
 using BankingSystemAPI.Core.Interfaces;
 using BankingSystemAPI.Core.Interfaces.Application;

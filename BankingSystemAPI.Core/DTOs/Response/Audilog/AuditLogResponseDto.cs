@@ -1,4 +1,4 @@
-﻿namespace BankingSystemAPI.Core.DTOs.Response;
+﻿namespace BankingSystemAPI.Core.DTOs.Response.Audilog;
 
 public class AuditLogResponseDto
 {
