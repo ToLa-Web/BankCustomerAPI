@@ -7,7 +7,7 @@ public class Transaction
 {
     public int TransactionId { get; set; }
     public int AccountId { get; set; }
-    public string TransactionReference { get; set; } = Guid.NewGuid().ToString("N");
+    public string TransactionReference { get; set; } = string.Empty;
     public TransactionType TransactionType { get; set; }
     
     public decimal Amount { get; set; } = decimal.Zero;

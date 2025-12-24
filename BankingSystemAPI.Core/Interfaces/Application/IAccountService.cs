@@ -20,5 +20,6 @@ public interface IAccountService
     Task<Result<IEnumerable<AccountAdminDto>>> GetAccountsTypeAsync(int? customerId, AccountType? accountType);
     Task<Result<PagedResult<TransactionDto>>> GetAccountTransactionsAsync(int userId, int accountId, int page, int pageSize);
     Task<Result<TransferResponseDto>> TransferAsync(int userId, TransferRequestDto dto, string? ip, string? device);
+    Task<Result<TransferReceiptDto>> GetTransferByReferenceAsync(int userId, string reference);
 }
 

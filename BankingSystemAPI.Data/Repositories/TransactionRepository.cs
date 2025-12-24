@@ -52,4 +52,12 @@ public class TransactionRepository : ITransactionRepository
             TotalCount = totalCount
         };
     }
+
+    public async Task<IReadOnlyList<Transaction>> GetByReferenceAsync(string reference)
+    {
+        return await _context.Transactions
+            .AsNoTracking()
+            .Where(t => t.TransactionReference == reference)
+            .ToListAsync();
+    }
 }

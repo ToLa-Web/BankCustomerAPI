@@ -10,7 +10,6 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
     {
         builder.ToTable("Transactions");
         builder.HasKey(t => t.TransactionId);
-        builder.HasIndex(t => t.TransactionReference).IsUnique();
         builder.Property(t => t.TransactionReference).IsRequired().HasMaxLength(64);
         builder.Property(t => t.Amount).HasPrecision(18,2);
         builder.Property(t => t.BalanceBefore).HasPrecision(18,2);

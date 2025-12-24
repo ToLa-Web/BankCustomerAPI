@@ -83,12 +83,18 @@ public class AccountController : ControllerBase
         var result = await _accountService.GetAccountTransactionsAsync(CustomerId, accountId, page, pageSize);
         return Ok(result);
     }
-     
+
+    [HttpGet("transfers/{reference}")]
+    public async Task<IActionResult> GetTransferByReference(string reference)
+    {
+        var result = await _accountService.GetTransferByReferenceAsync(CustomerId, reference);
+        return Ok(result);
+    }
     
     private (string? ip, string? device) GetRequestInfo()
-         {
-             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-             var device = HttpContext.Request.Headers.UserAgent.ToString();
-             return (ip, device);
-         }
+    {
+     var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+     var device = HttpContext.Request.Headers.UserAgent.ToString();
+     return (ip, device);
+    }
 }

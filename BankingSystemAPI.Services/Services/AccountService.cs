@@ -11,6 +11,7 @@ using BankingSystemAPI.Services.Mappings;
 using BankingSystemAPI.Services.Services.Helper;
 using BankingSystemAPI.Services.Validators;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BankingSystemAPI.Services.Services;
 
@@ -22,12 +23,15 @@ public class AccountService : IAccountService
     private readonly IAuditLogService _auditLogService;
     private readonly IUnitOfWork _unitOfWork;
 
+    private readonly ILogger<AccountService> _logger;
+
     public AccountService(
         IAccountRepository accountRepo,
         ICustomerRepository customerRepo, 
         ITransactionRepository transactionRepo,
         IAuditLogService auditLogService,
-        IUnitOfWork unitOfWork
+        IUnitOfWork unitOfWork,
+        ILogger<AccountService> logger
         )
     {
         _accountRepo = accountRepo;
@@ -35,6 +39,7 @@ public class AccountService : IAccountService
         _transactionRepo = transactionRepo;
         _auditLogService = auditLogService;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<Result<AccountDto>> CreateAccountAsync(int userId, CreateAccountDto dto, string? ip, string? device)
@@ -95,6 +100,8 @@ public class AccountService : IAccountService
         var balanceBefore = account.Balance;
         account.Balance += depositAmount;
         account.UpdatedAt = DateTime.UtcNow;
+        
+        var reference = Guid.NewGuid().ToString("N");
 
         var transaction = TransactionFactory.Create(
             account,
@@ -102,6 +109,7 @@ public class AccountService : IAccountService
             depositAmount,
             balanceBefore,
             account.Balance,
+            reference,
             "Cash deposit");
         try
         {
@@ -148,6 +156,8 @@ public class AccountService : IAccountService
         var balanceBefore = account.Balance;
         account.Balance -= withdrawAmount;
         account.UpdatedAt = DateTime.UtcNow;
+        
+        var reference = Guid.NewGuid().ToString("N");
 
         var transaction = TransactionFactory.Create(
             account,
@@ -155,6 +165,7 @@ public class AccountService : IAccountService
             withdrawAmount,
             balanceBefore,
             account.Balance,
+            reference,
             "Cash withdrawal");
 
         try
@@ -334,6 +345,8 @@ public class AccountService : IAccountService
         
         sender.UpdatedAt =  DateTime.UtcNow;
         receiver.UpdatedAt =  DateTime.UtcNow;
+        
+        var reference = Guid.NewGuid().ToString("N");
 
         var outTransaction = TransactionFactory.Create(
             sender,
@@ -341,6 +354,7 @@ public class AccountService : IAccountService
             dto.Amount,
             senderBefore,
             sender.Balance,
+            reference,
             dto.Description ?? $"Transfer to {receiver.AccountNumber}");
         outTransaction.RecipientAccountName = receiver.AccountNumber;
 
@@ -350,6 +364,7 @@ public class AccountService : IAccountService
             dto.Amount,
             receiverBefore,
             receiver.Balance,
+            reference,
             dto.Description ?? $"Transfer to {sender.AccountNumber}");
         inTransaction.RecipientAccountName = sender.AccountNumber;
 
@@ -390,6 +405,49 @@ public class AccountService : IAccountService
                 "One of the accounts was modified by another operation. Please try again.");
         }
 
+    }
+
+    public async Task<Result<TransferReceiptDto>> GetTransferByReferenceAsync(int userId, string reference)
+    {
+        var customer = await _customerRepo.GetByUserIdAsync(userId);
+        if (customer == null)
+            return Result<TransferReceiptDto>.Fail("Customer not found");
+        
+        var transactions = await _transactionRepo.GetByReferenceAsync(reference);
+        if (!transactions.Any())
+            return Result<TransferReceiptDto>.Fail("Transaction not found");
+        // foreach (var tx in transactions)
+        // {
+        //     Console.WriteLine(
+        //         $"TxId={tx.TransactionId}, Type={tx.TransactionType}, Ref={tx.TransactionReference}");
+        // }
+        // _logger.LogInformation(
+        //     "Transactions for ref {Ref}: {@Transactions}",
+        //     reference,
+        //     transactions.Select(t => new { t.TransactionId, t.TransactionType })
+        // );
+        var outTx = transactions.FirstOrDefault(t => t.TransactionType == TransactionType.TransferOut);
+        var inTx = transactions.FirstOrDefault(t => t.TransactionType == TransactionType.TransferIn);
+        if (outTx == null || inTx == null)
+            return Result<TransferReceiptDto>.Fail("Invalid transfer data");
+        
+        // Ownership check
+        var senderAccount = await _accountRepo.GetByIdAsync(outTx.AccountId);
+        if (senderAccount == null || senderAccount.CustomerId != customer.CustomerId)
+            return Result<TransferReceiptDto>.Fail("Access denied");
+
+        var receipt = new TransferReceiptDto
+        {
+            Reference = reference,
+            Amount = outTx.Amount,
+            Currency = senderAccount.Currency,
+            FromAccount = senderAccount.AccountNumber,
+            ToAccount = outTx.RecipientAccountName ?? "Unknown",
+            TransferredAt = outTx.CreatedAt,
+            Status = outTx.Status,
+        };
+
+        return Result<TransferReceiptDto>.SuccessResult(receipt);
     }
 
     private static string GenerateAccountNumber()

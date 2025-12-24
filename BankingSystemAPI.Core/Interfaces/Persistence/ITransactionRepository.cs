@@ -11,4 +11,5 @@ public interface ITransactionRepository
         int accountId,
         int page,
         int pageSize);
+    Task<IReadOnlyList<Transaction>> GetByReferenceAsync(string reference);
 }

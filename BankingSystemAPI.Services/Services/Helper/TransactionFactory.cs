@@ -10,6 +10,7 @@ public static class TransactionFactory
         decimal amount,
         decimal balanceBefore,
         decimal balanceAfter,
+        string reference,
         string? description = null)
     {
         return new Transaction
@@ -19,6 +20,7 @@ public static class TransactionFactory
             Amount = amount,
             BalanceBefore = balanceBefore,
             BalanceAfter = balanceAfter,
+            TransactionReference = reference,
             Description = description
         };
     }
