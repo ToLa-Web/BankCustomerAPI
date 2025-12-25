@@ -126,6 +126,9 @@ builder.Services.Configure<EmailSettings>(
 builder.Services.Configure<RefreshTokenSetting>(
     builder.Configuration.GetSection("RefreshTokenSettings")
 );
+builder.Services.Configure<CurrencyExchangeSettings>(
+    builder.Configuration.GetSection("CurrencyExchanges")
+);
 //Register DbContext
 builder.Services.AddDbContext<BankingSystemDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

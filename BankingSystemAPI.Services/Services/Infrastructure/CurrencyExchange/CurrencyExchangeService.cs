@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using BankingSystemAPI.Core.DTOs.Response;
+using BankingSystemAPI.Core.DTOs.Response.ExchangeRates;
 using BankingSystemAPI.Core.Interfaces.Infrastructure;
 using BankingSystemAPI.Core.settings;
 using Microsoft.Extensions.Options;
@@ -38,6 +39,20 @@ public class CurrencyExchangeService : ICurrencyExchangeService
         var converted = usdAmount * toRate;
 
         return Result<decimal>.SuccessResult(converted);
+    }
+
+    public async Task<Result<ExchangeRatesDto>> GetExchangeRatesAsync()
+    {
+        var ensure = await EnsureRatesAsync();
+        if (!ensure.Success)
+            return Result<ExchangeRatesDto>.Fail(ensure.Message!);
+        
+        return Result<ExchangeRatesDto>.SuccessResult(new ExchangeRatesDto
+        {
+            Base = "USD",
+            LastUpdated = _cache.LastUpdated,
+            Rates = _cache.Rates
+        });
     }
 
     private async Task<Result<bool>> EnsureRatesAsync()

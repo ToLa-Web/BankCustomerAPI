@@ -14,11 +14,13 @@ public class AdminAccountController : ControllerBase
 {
     private readonly IAccountService  _accountService;
     private readonly IInterestService _interestService;
+    private readonly ICurrencyExchangeService _exchangeService;
 
-    public AdminAccountController(IAccountService accountService, IInterestService interestService)
+    public AdminAccountController(IAccountService accountService, IInterestService interestService, ICurrencyExchangeService exchangeService)
     {
         _accountService = accountService;
         _interestService = interestService;
+        _exchangeService = exchangeService;
     }
     private int AdminId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     
@@ -84,5 +86,13 @@ public class AdminAccountController : ControllerBase
         var result = await _interestService.ApplyMonthlyInterestAsync();
         return Ok(result);
     }
+    
+    [HttpGet("exchange/convert")]
+    public async Task<IActionResult> Convert(decimal amount, string from, string to)
+    {
+        var result = await _exchangeService.ConvertAsync(amount, from, to);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
     
 }
