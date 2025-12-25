@@ -15,5 +15,7 @@ public interface IAccountRepository
     Task<IEnumerable<Account>> GetInactiveAccountsAsync();
     Task<IEnumerable<Account>> GetAllAsync(int? customerId, bool? isActive);
     Task<IEnumerable<Account>> GetAccountTypeAsync(int? customerId, AccountType? accountType);
+    Task<IEnumerable<Account>> GetSavingsAccountsAsync();
+
     //Task<IEnumerable<Account>> GetAccountsMaturingBeforeAsync(DateTime date);
 }

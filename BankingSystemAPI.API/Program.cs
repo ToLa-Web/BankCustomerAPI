@@ -12,7 +12,9 @@ using BankingSystemAPI.Data.Context;
 using BankingSystemAPI.Data.Repositories;
 using BankingSystemAPI.Services.Helpers;
 using BankingSystemAPI.Services.Services;
+using BankingSystemAPI.Services.Services.Infrastructure;
 using BankingSystemAPI.Services.Services.Infrastructure.CurrencyExchange;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -55,6 +57,12 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
+builder.Services.AddHangfire(config =>
+{
+    config.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+builder.Services.AddHangfireServer();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -140,6 +148,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IInterestService, InterestService>();
 
 //Infrastructure
 builder.Services.AddHttpClient<ICurrencyExchangeService, CurrencyExchangeService>();

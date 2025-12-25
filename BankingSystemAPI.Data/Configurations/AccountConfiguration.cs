@@ -27,7 +27,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
             .HasDefaultValue(0);
         
         builder.Property(a => a.InterestRate)
-            .HasColumnType("decimal(5,2)")
+            .HasColumnType("decimal(18,6)")
             .HasDefaultValue(0);
 
         builder.Property(a => a.MaturityDate)

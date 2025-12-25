@@ -1,5 +1,6 @@
 ﻿using BankingSystemAPI.Core.DTOs.Response;
 using BankingSystemAPI.Core.DTOs.Response.Account;
+using BankingSystemAPI.Core.DTOs.Response.AdminResponse;
 using BankingSystemAPI.Core.Entities;
 
 namespace BankingSystemAPI.Services.Mappings;
@@ -24,10 +25,12 @@ public static class AccountMapper
         return new AccountAdminDto
         {
             AccountId = account.AccountId,
+            CustomerId = account.CustomerId,
             AccountNumber = account.AccountNumber,
             AccountType = account.AccountType.ToString(),
             Balance = account.Balance,
             Currency = account.Currency,
+            IsActive =  account.IsActive,   
             CreatedAt = account.CreatedAt
         };
     }

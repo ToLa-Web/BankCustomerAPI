@@ -1,6 +1,7 @@
 ﻿using BankingSystemAPI.Core.DTOs.Request.AccountRequest;
 using BankingSystemAPI.Core.DTOs.Response;
 using BankingSystemAPI.Core.DTOs.Response.Account;
+using BankingSystemAPI.Core.DTOs.Response.AdminResponse;
 using BankingSystemAPI.Core.DTOs.Response.Transfer;
 using BankingSystemAPI.Core.Enums;
 
@@ -21,5 +22,8 @@ public interface IAccountService
     Task<Result<PagedResult<TransactionDto>>> GetAccountTransactionsAsync(int userId, int accountId, int page, int pageSize);
     Task<Result<TransferResponseDto>> TransferAsync(int userId, TransferRequestDto dto, string? ip, string? device);
     Task<Result<TransferReceiptDto>> GetTransferByReferenceAsync(int userId, string reference);
+    Task<ResultDto> FreezeAccountAsync(int accountId, int adminUserId);
+    Task<ResultDto> UnfreezeAccountAsync(int accountId, int adminUserId);
+    
 }
 

@@ -1,6 +1,4 @@
-﻿using BankingSystemAPI.Core.Enums;
-
-namespace BankingSystemAPI.Core.DTOs.Response.Account;
+﻿namespace BankingSystemAPI.Core.DTOs.Response.AdminResponse;
 
 public class AccountAdminDto
 {

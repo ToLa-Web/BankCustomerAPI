@@ -1,4 +1,4 @@
-﻿namespace BankingSystemAPI.Core.Entities;
+﻿namespace BankingSystemAPI.Core.Enums;
 
 public enum TransactionType
 {
@@ -6,6 +6,7 @@ public enum TransactionType
     Withdrawal = 2,
     TransferIn = 3,
     TransferOut = 4,
-    Fee = 5,
-    Interest = 6
+    Interest = 5,
+    Fee = 6
+    
 }

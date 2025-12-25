@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using BankingSystemAPI.Core.Enums;
 
 namespace BankingSystemAPI.Core.Entities;
 

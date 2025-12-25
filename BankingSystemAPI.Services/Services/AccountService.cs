@@ -1,6 +1,7 @@
 ﻿using BankingSystemAPI.Core.DTOs.Request.AccountRequest;
 using BankingSystemAPI.Core.DTOs.Response;
 using BankingSystemAPI.Core.DTOs.Response.Account;
+using BankingSystemAPI.Core.DTOs.Response.AdminResponse;
 using BankingSystemAPI.Core.DTOs.Response.Transfer;
 using BankingSystemAPI.Core.Entities;
 using BankingSystemAPI.Core.Enums;
@@ -67,13 +68,13 @@ public class AccountService : IAccountService
         switch (dto.AccountType)
         {
             case AccountType.Savings:
-                account.InterestRate = 1.5m;
+                account.InterestRate = 0.015m;
                 break;
             case AccountType.Current:
                 account.InterestRate = 0m;
                 break;
             case AccountType.FixedDeposit:
-                account.InterestRate = 5m;
+                account.InterestRate = 0.05m;
                 account.MaturityDate = DateTime.UtcNow.AddMonths(dto.FixedTermMonths ?? 6);
                 break;
         }
@@ -448,6 +449,58 @@ public class AccountService : IAccountService
         };
 
         return Result<TransferReceiptDto>.SuccessResult(receipt);
+    }
+
+    public async Task<ResultDto> FreezeAccountAsync(int accountId, int adminUserId)
+    {
+        var account = await _accountRepo.GetByIdAsync(accountId);
+        if (account == null)
+            return ResultDto.Fail("Account not found");
+        
+        if (!account.IsActive)
+            return ResultDto.Fail("Account is already frozen");
+
+        account.IsActive = false;
+        account.UpdatedAt = DateTime.UtcNow;
+        
+        _accountRepo.Update(account);
+
+        await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        {
+            await _auditLogService.LogAsync(
+                adminUserId,
+                $"Account {account.AccountNumber} frozen",
+                null,
+                "ADMIN");
+        });
+
+        return ResultDto.Ok("Account frozen successfully");
+    }
+
+    public async Task<ResultDto> UnfreezeAccountAsync(int accountId, int adminUserId)
+    {
+        var account = await _accountRepo.GetByIdAsync(accountId);
+        if (account == null)
+            return ResultDto.Fail("Account not found");
+        
+        if (account.IsActive)
+            return ResultDto.Fail("Account is already active");
+
+        account.IsActive = true;
+        account.UpdatedAt = DateTime.UtcNow;
+        
+        _accountRepo.Update(account);
+
+        await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        {
+            await _auditLogService.LogAsync(
+                adminUserId,
+                $"Account {account.AccountNumber} frozen",
+                null,
+                "ADMIN");
+        });
+
+        return ResultDto.Ok("Account unfrozen successfully");
     }
 
     private static string GenerateAccountNumber()

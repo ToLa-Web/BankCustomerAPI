@@ -7,4 +7,7 @@ public class ResultDto
     
     public static ResultDto Ok(string? message = null)
         => new() { Success = true, Message = message };
+    
+    public static ResultDto Fail(string? message = null)
+        => new() { Success = true, Message = message };
 }

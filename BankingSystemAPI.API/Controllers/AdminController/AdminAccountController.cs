@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using BankingSystemAPI.Core.Enums;
 using BankingSystemAPI.Core.Interfaces.Application;
+using BankingSystemAPI.Core.Interfaces.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,10 +13,12 @@ namespace BankingSystemAPI.API.Controllers.AdminController;
 public class AdminAccountController : ControllerBase
 {
     private readonly IAccountService  _accountService;
+    private readonly IInterestService _interestService;
 
-    public AdminAccountController(IAccountService accountService)
+    public AdminAccountController(IAccountService accountService, IInterestService interestService)
     {
         _accountService = accountService;
+        _interestService = interestService;
     }
     private int AdminId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     
@@ -60,4 +63,26 @@ public class AdminAccountController : ControllerBase
         var result = await _accountService.GetAccountsTypeAsync(customerId, accountType);
         return Ok(result);
     }
+    
+    [HttpPost("{accountId}/freeze")]
+    public async Task<IActionResult> Freeze(int accountId)
+    {
+        var result = await _accountService.FreezeAccountAsync(accountId, AdminId);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+    
+    [HttpPost("{accountId}/unfreeze")]
+    public async Task<IActionResult> UnFreeze(int accountId)
+    {
+        var result = await _accountService.UnfreezeAccountAsync(accountId, AdminId);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    [HttpPost("interset/apply")]
+    public async Task<IActionResult> ApplyInterset()
+    {
+        var result = await _interestService.ApplyMonthlyInterestAsync();
+        return Ok(result);
+    }
+    
 }

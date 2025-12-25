@@ -95,4 +95,14 @@ public class AccountRepository : IAccountRepository
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Account>> GetSavingsAccountsAsync()
+    {
+        return await _context.Accounts
+            .Where(a =>
+                a.AccountType == AccountType.Savings &&
+                a.IsActive &&
+                a.Balance > 0)
+            .ToListAsync();
+    }
 }
