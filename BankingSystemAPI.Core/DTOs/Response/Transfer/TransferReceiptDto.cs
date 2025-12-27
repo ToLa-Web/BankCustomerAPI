@@ -7,10 +7,15 @@ public class TransferReceiptDto
     public decimal Amount { get; set; }
     public string Currency { get; set; } = string.Empty;
 
-    public string FromAccount { get; set; } = string.Empty;
-    public string ToAccount { get; set; } = string.Empty;
-
     public DateTime TransferredAt { get; set; }
-
     public string Status { get; set; } = string.Empty;
+
+    // Sender 
+    public string SenderAccountNumber { get; set; } = string.Empty;
+    public string SenderName { get; set; } = string.Empty;
+
+    // Receiver
+    public string ReceiverAccountNumber { get; set; } = string.Empty;
+    public string ReceiverName { get; set; } = string.Empty;
+    public int ReceiverCustomerId {  get; set; }
 }

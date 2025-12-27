@@ -129,6 +129,9 @@ builder.Services.Configure<RefreshTokenSetting>(
 builder.Services.Configure<CurrencyExchangeSettings>(
     builder.Configuration.GetSection("CurrencyExchanges")
 );
+builder.Services.Configure<BankSettings>(
+    builder.Configuration.GetSection("BankSettings"));
+
 //Register DbContext
 builder.Services.AddDbContext<BankingSystemDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -142,6 +145,7 @@ builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IBeneficiariesRepo, BeneficiaryRepo>();
 
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -152,6 +156,7 @@ builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IInterestService, InterestService>();
+builder.Services.AddScoped<IBeneficiaryService, BeneficiaryService>();
 
 //Infrastructure
 builder.Services.AddHttpClient<ICurrencyExchangeService, CurrencyExchangeService>();

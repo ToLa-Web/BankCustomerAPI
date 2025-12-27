@@ -27,5 +27,6 @@ public class BankingSystemDbContext : DbContext
         modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
         modelBuilder.ApplyConfiguration(new AccountConfiguration());
         modelBuilder.ApplyConfiguration(new TransactionConfiguration());
+        modelBuilder.ApplyConfiguration(new BeneficiaryConfiguration());
     }
 }

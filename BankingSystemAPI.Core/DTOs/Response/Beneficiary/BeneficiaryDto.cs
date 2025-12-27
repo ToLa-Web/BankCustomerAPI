@@ -1,19 +1,13 @@
-﻿namespace BankingSystemAPI.Core.Entities;
+﻿namespace BankingSystemAPI.Core.DTOs.Response.Beneficiary;
 
-public class Beneficiary
+public class BeneficiaryDto
 {
     public int BeneficiaryId { get; set; }
-
-    public int CustomerId { get; set; }
-    public Customer Customer { get; set; } = null!;
-
     public string BeneficiaryName { get; set; } = string.Empty;
     public string AccountNumber { get; set; } = string.Empty;
-
     public string BankCode { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
-
+    public bool IsOurBank { get; set; }
     public string? Nickname { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+    public DateTime CreatedAt { get; set; }
 }

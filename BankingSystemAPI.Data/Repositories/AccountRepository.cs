@@ -17,6 +17,7 @@ public class AccountRepository : IAccountRepository
     {
         return await _context.Accounts
             .AsNoTracking()
+            .Include(a => a.Customer)
             .FirstOrDefaultAsync(a => a.AccountId == accountId);
     }
 
@@ -42,6 +43,7 @@ public class AccountRepository : IAccountRepository
     {
         return await _context.Accounts
             .AsNoTracking()
+            .Include(a => a.Customer)
             .FirstOrDefaultAsync(a => a.AccountNumber == accountNumber);
     }
 
