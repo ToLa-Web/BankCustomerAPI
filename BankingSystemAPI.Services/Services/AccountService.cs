@@ -357,7 +357,8 @@ public class AccountService : IAccountService
             sender.Balance,
             reference,
             dto.Description ?? $"Transfer to {receiver.AccountNumber}");
-        outTransaction.RecipientAccountName = receiver.AccountNumber;
+        outTransaction.RecipientAccount = receiver.AccountNumber;
+        outTransaction.RecipientAccountName = $"{receiver.Customer!.FirstName} {receiver.Customer!.LastName}";
 
         var inTransaction = TransactionFactory.Create(
             receiver,
@@ -367,7 +368,8 @@ public class AccountService : IAccountService
             receiver.Balance,
             reference,
             dto.Description ?? $"Transfer to {sender.AccountNumber}");
-        inTransaction.RecipientAccountName = sender.AccountNumber;
+        inTransaction.RecipientAccount = sender.AccountNumber;
+        inTransaction.RecipientAccountName = $"{sender.Customer!.FirstName} {sender.Customer!.LastName}";
 
         try
         {
@@ -405,51 +407,67 @@ public class AccountService : IAccountService
             return Result<TransferResponseDto>.Fail(
                 "One of the accounts was modified by another operation. Please try again.");
         }
-
     }
 
     public async Task<Result<TransferReceiptDto>> GetTransferByReferenceAsync(int userId, string reference)
+{
+    var customer = await _customerRepo.GetByUserIdAsync(userId);
+    if (customer == null)
+        return Result<TransferReceiptDto>.Fail("Customer not found");
+
+    var transactions = await _transactionRepo.GetByReferenceAsync(reference);
+    if (!transactions.Any())
+        return Result<TransferReceiptDto>.Fail("Transaction not found");
+
+    // foreach (var tx in transactions)
+    // {
+    //     Console.WriteLine(
+    //         $"TxId={tx.TransactionId}, Type={tx.TransactionType}, Ref={tx.TransactionReference}");
+    // }
+    // _logger.LogInformation(
+    //     "Transactions for ref {Ref}: {@Transactions}",
+    //     reference,
+    //     transactions.Select(t => new { t.TransactionId, t.TransactionType })
+    // );
+    var outTx = transactions.FirstOrDefault(t => t.TransactionType == TransactionType.TransferOut);
+    var inTx = transactions.FirstOrDefault(t => t.TransactionType == TransactionType.TransferIn);
+
+    if (outTx == null || inTx == null)
+        return Result<TransferReceiptDto>.Fail("Invalid transfer data");
+
+    var senderAccount = await _accountRepo.GetByIdAsync(outTx.AccountId);
+    if (senderAccount == null)
+        return Result<TransferReceiptDto>.Fail("Sender account not found");
+
+    var receiverAccount = await _accountRepo.GetByIdAsync(inTx.AccountId);
+    if (receiverAccount == null)
+        return Result<TransferReceiptDto>.Fail("Receiver account not found");
+
+    // SECURITY: only sender or receiver can access receipt
+    var isSender = senderAccount.CustomerId == customer.CustomerId;
+    var isReceiver = receiverAccount.CustomerId == customer.CustomerId;
+
+    if (!isSender && !isReceiver)
+        return Result<TransferReceiptDto>.Fail("Access denied");
+
+    var receipt = new TransferReceiptDto
     {
-        var customer = await _customerRepo.GetByUserIdAsync(userId);
-        if (customer == null)
-            return Result<TransferReceiptDto>.Fail("Customer not found");
-        
-        var transactions = await _transactionRepo.GetByReferenceAsync(reference);
-        if (!transactions.Any())
-            return Result<TransferReceiptDto>.Fail("Transaction not found");
-        // foreach (var tx in transactions)
-        // {
-        //     Console.WriteLine(
-        //         $"TxId={tx.TransactionId}, Type={tx.TransactionType}, Ref={tx.TransactionReference}");
-        // }
-        // _logger.LogInformation(
-        //     "Transactions for ref {Ref}: {@Transactions}",
-        //     reference,
-        //     transactions.Select(t => new { t.TransactionId, t.TransactionType })
-        // );
-        var outTx = transactions.FirstOrDefault(t => t.TransactionType == TransactionType.TransferOut);
-        var inTx = transactions.FirstOrDefault(t => t.TransactionType == TransactionType.TransferIn);
-        if (outTx == null || inTx == null)
-            return Result<TransferReceiptDto>.Fail("Invalid transfer data");
-        
-        // Ownership check
-        var senderAccount = await _accountRepo.GetByIdAsync(outTx.AccountId);
-        if (senderAccount == null || senderAccount.CustomerId != customer.CustomerId)
-            return Result<TransferReceiptDto>.Fail("Access denied");
+        Reference = reference,
+        Amount = outTx.Amount,
+        Currency = senderAccount.Currency,
+        TransferredAt = outTx.CreatedAt,
+        Status = outTx.Status,
 
-        var receipt = new TransferReceiptDto
-        {
-            Reference = reference,
-            Amount = outTx.Amount,
-            Currency = senderAccount.Currency,
-            FromAccount = senderAccount.AccountNumber,
-            ToAccount = outTx.RecipientAccountName ?? "Unknown",
-            TransferredAt = outTx.CreatedAt,
-            Status = outTx.Status,
-        };
+        SenderAccountNumber = senderAccount.AccountNumber,
+        SenderName = $"{senderAccount.Customer!.FirstName} {senderAccount.Customer.LastName}",
 
-        return Result<TransferReceiptDto>.SuccessResult(receipt);
-    }
+        ReceiverAccountNumber = receiverAccount.AccountNumber,
+        ReceiverName = $"{receiverAccount.Customer!.FirstName} {receiverAccount.Customer.LastName}",
+        ReceiverCustomerId = receiverAccount.CustomerId
+    };
+
+    return Result<TransferReceiptDto>.SuccessResult(receipt);
+}
 
     public async Task<ResultDto> FreezeAccountAsync(int accountId, int adminUserId)
     {
