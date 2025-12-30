@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace BankingSystemAPI.Services.Helpers;
+namespace BankingSystemAPI.Core.Helpers;
 
 public static class PasswordHasher
 {

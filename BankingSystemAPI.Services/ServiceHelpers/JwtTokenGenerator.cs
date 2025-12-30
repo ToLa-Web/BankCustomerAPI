@@ -1,12 +1,12 @@
-﻿using BankingSystemAPI.Core.Entities;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BankingSystemAPI.Core.Entities;
 using BankingSystemAPI.Core.Enums;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
-namespace BankingSystemAPI.Services.Helpers
+namespace BankingSystemAPI.Services.ServiceHelpers
 {
     public class JwtTokenGenerator
     {

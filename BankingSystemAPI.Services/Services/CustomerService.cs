@@ -128,7 +128,7 @@ public class CustomerService : ICustomerService
     // ApproveCustomer by admin or staff
     public async Task<Result<CustomerDto>> ApproveCustomerAsync(int customerId, int performedByUserId)
     {
-        var customer = await _customerRepo.GetByUserIdAsync(customerId);
+        var customer = await _customerRepo.GetByIdAsync(customerId);
         if (customer == null)
             return Result<CustomerDto>.Fail("Customer not found.");
         

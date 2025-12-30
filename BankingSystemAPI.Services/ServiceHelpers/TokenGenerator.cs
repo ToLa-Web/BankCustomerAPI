@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace BankingSystemAPI.Services.Helpers;
+namespace BankingSystemAPI.Services.ServiceHelpers;
 
 public class TokenGenerator
 {
