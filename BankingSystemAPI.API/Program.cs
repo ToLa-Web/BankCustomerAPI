@@ -10,7 +10,8 @@ using BankingSystemAPI.Core.settings;
 using BankingSystemAPI.Data;
 using BankingSystemAPI.Data.Context;
 using BankingSystemAPI.Data.Repositories;
-using BankingSystemAPI.Services.Helpers;
+using BankingSystemAPI.Data.Seed;
+using BankingSystemAPI.Services.ServiceHelpers;
 using BankingSystemAPI.Services.Services;
 using BankingSystemAPI.Services.Services.Infrastructure;
 using BankingSystemAPI.Services.Services.Infrastructure.CurrencyExchange;
@@ -21,7 +22,6 @@ using Microsoft.IdentityModel.Tokens;
     
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 // Add services to the container.
 
@@ -164,6 +164,13 @@ builder.Services.AddHttpClient<ICurrencyExchangeService, CurrencyExchangeService
 builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
 
+//Enable Auto-Migrations on Startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BankingSystemDbContext>();
+    db.Database.Migrate();
+    await DatabaseSeeder.SeedAsync(db);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
